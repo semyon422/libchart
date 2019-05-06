@@ -57,7 +57,7 @@ end
 Upscaler.getBestColumnIndex = function(self, noteBlock)
 	local rates = {}
 	for columnIndex = 1, self.columnCount do
-		rates[columnIndex] = self.columns[self.noteChart.columnCount][noteBlock.baseColumnIndex][columnIndex]
+		rates[columnIndex] = self.columns[noteBlock.baseColumnIndex][columnIndex]
 	end
 	
 	for columnIndex = 1, self.columnCount do
@@ -102,30 +102,5 @@ Upscaler.getBestColumnIndex = function(self, noteBlock)
 	
 	return bestColumnIndex
 end
-
-Upscaler.columns = {
-	[4] = {
-		{1,1,1,0,0,0,0,0,0,0},
-		{0,0,1,1,1,0,0,0,0,0},
-		{0,0,0,0,0,1,1,1,0,0},
-		{0,0,0,0,0,0,0,1,1,1},
-	},
-	[5] = {
-		{1,1,0,0,0,0,0,0,0,0},
-		{0,0,1,1,0,0,0,0,0,0},
-		{0,0,0,0,1,1,0,0,0,0},
-		{0,0,0,0,0,0,1,1,0,0},
-		{0,0,0,0,0,0,0,0,1,1},
-	},
-	[7] = {
-		{1,1,0,0,0,0,0,0,0,0},
-		{0,1,1,0,0,0,0,0,0,0},
-		{0,0,1,1,0,0,0,0,0,0},
-		{0,0,0,0,1,1,0,0,0,0},
-		{0,0,0,0,0,0,1,1,0,0},
-		{0,0,0,0,0,0,0,1,1,0},
-		{0,0,0,0,0,0,0,0,1,1},
-	},
-}
 
 return Upscaler
