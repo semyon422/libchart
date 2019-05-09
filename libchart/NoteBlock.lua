@@ -70,35 +70,19 @@ end
 NoteBlock.extend = function(self)
 	local lastNote = self.notes[#self.notes]
 	local nextNote = lastNote.top
-	local preLastNote = self.notes[#self.notes - 1]
-	local nextLine = lastNote.line.next
 	
-	if not isNextLineFree(lastNote) then
-		return
+	local nextLine
+	if not nextNote then
+		nextLine = lastNote.line.last
+	else
+		nextLine = nextNote.line.prev
 	end
 	
-	if lastNote.startTime ~= lastNote.endTime then
-		if nextLine and nextLine.startTime > self.endTime then
-			self.endTime = nextLine.startTime
-		end
+	if nextLine.startTime <= self.endTime then
 		return
-	end
-	
-	if preLastNote then
-		local deltaTime = lastNote.startTime - preLastNote.startTime
-		local nextTime = lastNote.startTime + deltaTime
-		
-		if nextTime > nextLine.startTime and math.abs(nextTime - nextLine.startTime) > 1 then
-			if not nextNote or nextTime < nextNote.startTime and math.abs(nextTime - nextNote.startTime) > 1 then
-				self.endTime = nextTime
-				return
-			end
-		end
 	end
 	
 	self.endTime = nextLine.startTime
-	
-	return
 end
 
 NoteBlock.print = function(self)
