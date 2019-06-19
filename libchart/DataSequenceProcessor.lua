@@ -11,7 +11,7 @@ DataSequenceProcessor.new = function(self)
 	return dataSequenceProcessor
 end
 
-DataSequenceProcessor.getDataSequenceProduct = function(self, dataSequences)
+DataSequenceProcessor.process = function(self, dataSequences)
 	local timeData = {}
 	
 	for _, dataSequence in pairs(dataSequences) do
