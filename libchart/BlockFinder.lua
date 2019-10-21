@@ -107,6 +107,10 @@ BlockFinder.findBlock = function(self, note)
 	return block
 end
 
+local sortBlocks = function(a, b)
+	return a.startTime < b.startTime or a.startTime == b.startTime and a.columnIndex < b.columnIndex
+end
+
 BlockFinder.getNoteBlocks = function(self)
 	local blocks = {}
 	
@@ -115,6 +119,7 @@ BlockFinder.getNoteBlocks = function(self)
 			blocks[#blocks + 1] = note.block
 		end
 	end
+	table.sort(blocks, sortBlocks)
 	
 	return blocks
 end
