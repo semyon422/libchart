@@ -90,49 +90,37 @@ NanoChart.encodeNote = function(self, input, type, sameTime, noteTime)
 	local postfix = ""
 	local noteType
 
-	if not sameTime then
-		if input > 12 then
-			prefix = self:encodeNote(0, 0, false, noteTime)
-			postfix = byte.int8_to_string(input)
-			input = 0xff
-
-			noteType = "next"
-		else
-			noteType = "start"
-		end 
-	else
-		if input > 12 then
-			postfix = byte.int8_to_string(input)
-			input = 0xff
-		end 
-		noteType = "next"
-	end
-
 	local bits = {}
-	local data
-
-	local inputBits = tobits(input)
-	for i = 1, #inputBits do
-		bits[5 - i] = inputBits[i]
-	end
 
 	bits[5] = type
 	bits[6] = sameTime and 1 or 0
+
+	if input > 12 then
+		postfix = byte.int8_to_string(input)
+		input = 0xff
+
+		if not sameTime then
+			prefix = self:encodeNote(0, 0, false, noteTime)
+			sameTime = true
+		end
+	end
+
+	local inputBits = tobits(input)
+	for i = 1, 4 do
+		bits[i] = inputBits[5 - i] or 0
+	end
 	
-	if noteType == "start" then
+	local data
+	if not sameTime then
 		local timeBits = tobits(math.floor(noteTime * 1024))
-		for i = 1, #timeBits do
-			bits[17 - i] = timeBits[i]
+		for i = 7, 16 do
+			bits[i] = timeBits[17 - i] or 0
 		end
 
-		for i = 1, 16 do
-			bits[i] = bits[i] or 0
-		end
 		data = byte.int16_to_string_be(tonumber(table.concat(bits), 2))
-	elseif noteType == "next" then
-		for i = 1, 8 do
-			bits[i] = bits[i] or 0
-		end
+	else
+		bits[7] = 0
+		bits[8] = 0
 		data = byte.int8_to_string(tonumber(table.concat(bits), 2))
 	end
 
