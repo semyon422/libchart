@@ -20,20 +20,20 @@ end
 	}
 
 	startObject {
-		0001 .... .... .... / input = [1, 12], 0 is no object, 14 is delay object, 15 is extended object
+		0001 .... .... .... / input = [1, 12], 0 is no object (see usage below), 14 is delay object, 15 is extended object
 		     0... .... .... / 1 - press, 0 - release
-		      0.. .... .... / at same time
-		       00 0000 0000 / time fraction denominator, 1024 values, 0x000 -> 0 seconds, 0x3ff -> 1023/1024 seconds
+		      0.. .... .... / 1 - at same time, 0 - at new time
+		       00 0000 0000 / time fraction numerator, 1024 values, 0x000 -> 0 seconds, 0x3ff -> 1023/1024 seconds
 	}
 
 	nextObject {
 		0001 .... / input = [1, 14]
 		     0... / 1 - press, 0 - release
-		      0.. / at same time
+		      1.. / 1 - at same time, 0 - at new time
 		       00 / unused bits
 	}
 
-	nextObjectExtended { -- always at same time
+	nextObjectExtended { -- always at same time, use 0-input object to define time
 		1111 .... .... .... / object type, always 1111
 		     0... .... .... / 1 - press, 0 - release
 		      000 .... .... / unused bits
@@ -41,7 +41,7 @@ end
 	}
 
 	nextDelayObject {
-		1110 .... / object type, always 1110
+		1110 .... / object type 14 == 1110 is delay object
 		     0000 / delay = [0, 15] seconds
 	}
 ]]
@@ -55,6 +55,8 @@ end
 			0		p		2
 			2.25	r		2
 			36		r		3
+			36		p		255
+			36.5	r		255
 
 	0000 0001
 
@@ -65,25 +67,33 @@ end
 
 	0000 0100
 
-	0001 1000 0000 0000
-	0011 1100
-	0000 0010
-	0011 0001 0000 0000
-	0000 1111
-	0000 1111
-	0000 0010
-	0011 0000 0000 0000
+	0001 1100 0000 0000 -- 1st note
+	0010 1100           -- 2nd note
+	1110 0010			-- 2 seconds delay
+	0010 0001 0000 0000 -- 3rd note
+	1110 1111			-- 15 seconds delay
+	1110 1111			-- 15 seconds delay
+	1110 0010			-- 2 seconds delay
+	0011 0000 0000 0000 -- 4th note
+	1111 1000 1111 1111 -- 5th note
+	0000 0010 0000 0000 -- 0-input note (+0.5)
+	1111 0000 1111 1111 -- 6th note
 ]]
 
-local tobits = function(n)
+local tobits = function(n) -- order is reversed
 	local t = {}
 	while n > 0 do
-		local rest = math.fmod(n, 2)
+		local rest = n % 2
 		t[#t + 1] = rest
 		n = (n - rest) / 2
 	end
 	return t
 end
+
+assert(table.concat(tobits(1)) == "1")
+assert(table.concat(tobits(2)) == "01")
+assert(table.concat(tobits(1023)) == "1111111111")
+assert(table.concat(tobits(1024)) == "00000000001")
 
 NanoChart.encodeNote = function(self, input, type, sameTime, noteTime)
 	local prefix = ""
@@ -127,8 +137,9 @@ NanoChart.encodeNote = function(self, input, type, sameTime, noteTime)
 	return prefix .. data .. postfix
 end
 
+local hexReplace = function(c) return ("%02x"):format(c:byte()) end
 local tohex = function(s)
-    return (s:gsub('.', function(c) return ("%02x"):format(c:byte()) end))
+    return (s:gsub('.', hexReplace))
 end
 
 -- print(tohex(NanoChart:encodeNote(1, 0, false, 0.125)))
@@ -140,9 +151,9 @@ assert(tohex(NanoChart:encodeNote(12, 1, true)) == "cc")				-- 11001100
 assert(tohex(NanoChart:encodeNote(128, 0, false, 1/128)) == "0008f080")	-- 0000000000001000 1111000010000000
 assert(tohex(NanoChart:encodeNote(128, 0, true, 1/128)) == "f480")		-- 1111010010000000
 
-
+local sortNotes = function(a, b) return a.time < b.time or a.time == b.time and a.input < b.input end
 NanoChart.encode = function(self, hash, inputs, notes)
-	table.sort(notes, function(a, b) return a.time < b.time or a.time == b.time and a.input < b.input end)
+	table.sort(notes, sortNotes)
 
 	local objects = {
 		byte.int8_to_string(1),
@@ -215,11 +226,13 @@ NanoChart.decode = function(self, content)
 				noteTime = bit.lshift(bits[7], 9) + bit.lshift(bits[8], 8) + byte.read_uint8(buffer)
 			end
 
-			notes[#notes + 1] = {
-				time = offset + noteTime / 1024,
-				type = type,
-				input = input
-			}
+			if input ~= 0 then
+				notes[#notes + 1] = {
+					time = offset + noteTime / 1024,
+					type = type,
+					input = input
+				}
+			end
 		end
 	end
 
@@ -237,7 +250,7 @@ NanoChart.getNotes = function(self, noteChart)
 		if a[2] ~= b[2] then
 			return a[2] > b[2]
 		else
-			return a[1] < b [1]
+			return a[1] < b[1]
 		end
 	end)
 
