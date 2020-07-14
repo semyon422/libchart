@@ -119,7 +119,7 @@ NanoChart.encodeNote = function(self, input, type, sameTime, noteTime)
 	for i = 1, 4 do
 		bits[i] = inputBits[5 - i] or 0
 	end
-	
+
 	local data
 	if not sameTime then
 		local timeBits = tobits(math.floor(noteTime * 1024))
@@ -191,18 +191,19 @@ NanoChart.encode = function(self, hash, inputs, notes)
 end
 
 NanoChart.decode = function(self, content)
-	local buffer = byte.buffer(content, 0, #content, true)
+	local buffer = byte.buffer(#content)
+	buffer:fill(content)
 
-	local version = byte.read_uint8(buffer)
-	local hash = byte.read_string(buffer, 16)
-	local inputs = byte.read_uint8(buffer)
+	local version = buffer:uint8()
+	local hash = buffer:string(16)
+	local inputs = buffer:uint8()
 
 	local notes = {}
 
 	local offset = 0
 	local noteTime = 0
-	while buffer.length > 0 do
-		local cbyte = byte.read_uint8(buffer)
+	while buffer.offset < buffer.size do
+		local cbyte = buffer:uint8()
 
 		local tempBits = tobits(cbyte)
 		local bits = {}
@@ -217,13 +218,13 @@ NanoChart.decode = function(self, content)
 			notes[#notes + 1] = {
 				time = offset + noteTime / 1024,
 				type = bits[5],
-				input = byte.read_uint8(buffer)
+				input = buffer:uint8()
 			}
 		else
 			local type = bits[5]
-			
+
 			if bits[6] == 0 then
-				noteTime = bit.lshift(bits[7], 9) + bit.lshift(bits[8], 8) + byte.read_uint8(buffer)
+				noteTime = bit.lshift(bits[7], 9) + bit.lshift(bits[8], 8) + buffer:uint8()
 			end
 
 			if input ~= 0 then
@@ -245,7 +246,7 @@ NanoChart.getNotes = function(self, noteChart)
 	for inputType, inputCount in pairs(noteChart.inputMode.data) do
 		inputs[#inputs + 1] = {inputType, inputCount}
 	end
-	
+
 	table.sort(inputs, function(a, b)
 		if a[2] ~= b[2] then
 			return a[2] > b[2]
@@ -262,15 +263,15 @@ NanoChart.getNotes = function(self, noteChart)
 			c = c + 1
 		end
 	end
-	
+
 	local notes = {}
 
 	for layerIndex in noteChart:getLayerDataIndexIterator() do
 		local layerData = noteChart:requireLayerData(layerIndex)
-		
+
 		for noteDataIndex = 1, layerData:getNoteDataCount() do
 			local noteData = layerData:getNoteData(noteDataIndex)
-			
+
 			if noteData.noteType == "ShortNote" or noteData.noteType == "LongNoteStart" then
 				notes[#notes + 1] = {
 					time = noteData.timePoint.absoluteTime,
