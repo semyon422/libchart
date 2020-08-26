@@ -157,7 +157,7 @@ NanoChart.encode = function(self, hash, inputs, notes)
 
 	local objects = {
 		byte.int8_to_string(1),
-		hash,
+		assert(#hash == 16 and hash),
 		byte.int8_to_string(inputs)
 	}
 
@@ -192,7 +192,7 @@ end
 
 NanoChart.decode = function(self, content)
 	local buffer = byte.buffer(#content)
-	buffer:fill(content)
+	buffer:fill(content):seek(0)
 
 	local version = buffer:uint8()
 	local hash = buffer:string(16)
@@ -238,57 +238,6 @@ NanoChart.decode = function(self, content)
 	end
 
 	return version, hash, inputs, notes
-end
-
-NanoChart.getNotes = function(self, noteChart)
-	local inputs = {}
-
-	for inputType, inputCount in pairs(noteChart.inputMode.data) do
-		inputs[#inputs + 1] = {inputType, inputCount}
-	end
-
-	table.sort(inputs, function(a, b)
-		if a[2] ~= b[2] then
-			return a[2] > b[2]
-		else
-			return a[1] < b[1]
-		end
-	end)
-
-	local keymap = {}
-	local c = 1
-	for index, input in ipairs(inputs) do
-		for i = 1, input[2] do
-			keymap[input[1] .. i] = c
-			c = c + 1
-		end
-	end
-
-	local notes = {}
-
-	for layerIndex in noteChart:getLayerDataIndexIterator() do
-		local layerData = noteChart:requireLayerData(layerIndex)
-
-		for noteDataIndex = 1, layerData:getNoteDataCount() do
-			local noteData = layerData:getNoteData(noteDataIndex)
-
-			if noteData.noteType == "ShortNote" or noteData.noteType == "LongNoteStart" then
-				notes[#notes + 1] = {
-					time = noteData.timePoint.absoluteTime,
-					type = 1,
-					input = keymap[noteData.inputType .. noteData.inputIndex]
-				}
-			elseif noteData.noteType == "LongNoteEnd" then
-				notes[#notes + 1] = {
-					time = noteData.timePoint.absoluteTime,
-					type = 0,
-					input = keymap[noteData.inputType .. noteData.inputIndex]
-				}
-			end
-		end
-	end
-
-	return notes, #inputs
 end
 
 return NanoChart
