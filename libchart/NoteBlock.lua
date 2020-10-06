@@ -85,6 +85,24 @@ NoteBlock.extend = function(self)
 	self.endTime = nextLine.startTime
 end
 
+NoteBlock.extendNextLine = function(self)
+	local lastNote = self.notes[#self.notes]
+	local nextNote = lastNote.top
+	
+	local nextLine
+	if not nextNote then
+		nextLine = lastNote.line.last
+	else
+		nextLine = lastNote.line.next
+	end
+	
+	if nextLine.startTime <= self.endTime then
+		return
+	end
+	
+	self.endTime = nextLine.startTime
+end
+
 NoteBlock.print = function(self)
 	print("block")
 	print("lanePos, linePos")
