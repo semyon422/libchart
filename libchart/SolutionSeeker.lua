@@ -11,20 +11,26 @@ SolutionSeeker.solve = function(self, notes, laneCount, check)
 		if not note then
 			break
 		end
+
+		local seeker = note.seeker
+		if not seeker then
+			seeker = {}
+			note.seeker = seeker
+		end
 		
-		local lanes = note.lanes
+		local lanes = seeker.lanes
 		if not lanes then
 			lanes = {}
-			note.lanes = lanes
+			seeker.lanes = lanes
 			for lane = 1, laneCount do
 				lanes[#lanes + 1] = 0
 			end
 		end
 
-		local rates = note.rates
-		if not note.rates then
+		local rates = seeker.rates
+		if not rates then
 			rates = {}
-			note.rates = rates
+			seeker.rates = rates
 			for lane = 1, laneCount do
 				rates[#rates + 1] = {lane, check(noteIndex, lane)}
 			end
@@ -36,28 +42,29 @@ SolutionSeeker.solve = function(self, notes, laneCount, check)
 			local rate = rates[k][2]
 			if lanes[lane] == 0 and rate > 0 then
 				lanes[lane] = 1
-				note.lane = lane
+				seeker.lane = lane
 				break
 			end
 		end
-		if note.lane then
-			print("forward", noteIndex, note.lane)
+		if seeker.lane then
+			print("forward", noteIndex, seeker.lane)
 			noteIndex = noteIndex + 1
 		else
 			-- for i = 1, laneCount do
 			-- 	print(rates[i][1], rates[i][2])
 			-- end
 			-- io.read()
-			note.lanes = nil
-			note.rates = nil
+			seeker.lanes = nil
+			seeker.rates = nil
 			local prevNote = notes[noteIndex - 1]
 			if not prevNote then
 				break
 			end
-			prevNote.lanes[prevNote.lane] = -1
-			prevNote.lane = nil
+			local prevSeeker = prevNote.seeker
+			prevSeeker.lanes[prevSeeker.lane] = -1
+			prevSeeker.lane = nil
 			noteIndex = noteIndex - 1
-			print("back" .. noteIndex, unpack(prevNote.lanes))
+			print("back" .. noteIndex, unpack(prevSeeker.lanes))
 		end
 	end
 	if noteIndex == 1 then
