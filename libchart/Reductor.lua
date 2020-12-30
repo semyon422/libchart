@@ -1,5 +1,6 @@
 local SolutionSeeker = require("libchart.SolutionSeeker")
 local enps = require("libchart.enps")
+local bit = require("bit")
 
 local Reductor = {}
 
@@ -32,6 +33,8 @@ Reductor.createIntersectTable = function(self)
 	self.intersectTable = intersectTable
 end
 
+
+-- if #line1 differs from #line2, save difference, don't make identical lines
 local recursionLimit = 8
 Reductor.check = function(self, pairIndex, combinationId)
 	local _pairs = self.pairs
@@ -201,6 +204,7 @@ Reductor.checkLine = function(self, lineIndex, lineCombinationId)
 			densitySum = densitySum + lineExpDensities[i]
 		end
 	end
+	-- densitySum = 0
 
 	local overDiff = self:overDiff(columnNotes, line.baseColumns)
 
@@ -440,6 +444,8 @@ end
 
 Reductor.reduceLongNotes = function(self)
 	local lines = self.lines
+	local allLines = self.allLines
+	local allLinesMap = self.allLinesMap
 	for i = 1, #lines - 1 do
 		local line = lines[i]
 		for _, note in ipairs(line.notes) do
@@ -450,26 +456,45 @@ Reductor.reduceLongNotes = function(self)
 
 				local gap
 				if note.baseEndTime >= line.time + window then
-				-- if note.baseEndTime >= nextLine.time - 10 then
 					gap = nextLine.time - preNextLine.time
 				end
 
 				local baseGap
-				if note.top then
-					baseGap = note.top.startTime - note.baseEndTime
+				local nearLineTime = allLines[allLinesMap[note.baseEndTime] + 1]
+				if nearLineTime then
+					baseGap = nearLineTime - note.baseEndTime
 				end
 
-				if note.baseEndTime < line.time + window then
-					note.endTime = note.baseEndTime
-				elseif baseGap and baseGap < window then
-					note.endTime = math.min(nextLine.time - baseGap, note.baseEndTime)
-					-- use gap between endtime and next nearest line, not a top note
+				local reverseGap
+				local nextAppliedSuggestedNote = nextLine.appliedSuggested[note.columnIndex]
+				if nextAppliedSuggestedNote and nextAppliedSuggestedNote.bottom then
+					reverseGap = nextAppliedSuggestedNote.startTime - nextAppliedSuggestedNote.bottom.baseEndTime
+				end
+
+				local minBaseGap
+				if baseGap and reverseGap then
+					minBaseGap = math.min(baseGap, reverseGap)
+				elseif baseGap then
+					minBaseGap = baseGap
+				elseif reverseGap then
+					minBaseGap = reverseGap
+				end
+
+				-- if note.startTime == 79145 then
+				-- 	print(gap, baseGap, reverseGap, minBaseGap, window)
+				-- end
+
+				-- if note.baseEndTime < line.time + window then
+				-- 	note.endTime = note.baseEndTime
+				-- elseif minBaseGap and minBaseGap < window then
+				if minBaseGap and minBaseGap < window then
+					-- note.endTime = nextLine.time - minBaseGap
+					note.endTime = math.min(nextLine.time - minBaseGap, note.baseEndTime)
 				elseif gap then
 					note.endTime = math.min(nextLine.time - gap, note.baseEndTime)
 				else
 					note.endTime = math.min(note.startTime, note.baseEndTime)
 				end
-				-- tranquility 00:42:068 (42068|3) - 
 			end
 		end
 	end
@@ -481,6 +506,9 @@ Reductor.preprocessLine = function(self, line)
 
 	local baseColumns = {}
 	line.baseColumns = baseColumns
+
+	local appliedSuggested = {}
+	line.appliedSuggested = appliedSuggested
 
 	local shortNoteCount = 0
 	local longNoteCount = 0
@@ -507,6 +535,7 @@ Reductor.applyNotesEqual = function(self, line)
 	local notes = {}
 	for i = 1, line.noteCount do
 		line.baseNotes[i].suggestedColumn = line.suggestedColumns[i]
+		line.appliedSuggested[line.baseNotes[i].suggestedColumn] = line.baseNotes[i]
 		notes[#notes + 1] = line.baseNotes[i]
 	end
 	line.notes = notes
@@ -516,6 +545,7 @@ Reductor.applyNotesLessShort = function(self, line)
 	local notes = {}
 	for i = 1, line.noteCount do
 		line.baseNotes[i].suggestedColumn = line.suggestedColumns[i]
+		line.appliedSuggested[line.baseNotes[i].suggestedColumn] = line.baseNotes[i]
 		notes[#notes + 1] = line.baseNotes[i]
 	end
 	line.notes = notes
@@ -539,6 +569,7 @@ Reductor.applyNotesLessLong = function(self, line)
 
 	for i = 1, line.noteCount do
 		notes[i].suggestedColumn = line.suggestedColumns[i]
+		line.appliedSuggested[notes[i].suggestedColumn] = notes[i]
 	end
 	line.notes = notes
 end
@@ -572,6 +603,7 @@ Reductor.applyNotesLessCombined = function(self, line)
 
 	for i = 1, line.noteCount do
 		notes[i].suggestedColumn = line.suggestedColumns[i]
+		line.appliedSuggested[notes[i].suggestedColumn] = notes[i]
 	end
 	line.notes = notes
 end
@@ -594,6 +626,7 @@ Reductor.applyNotes = function(self)
 			self:applyNotesLess(line)
 		end
 	end
+	-- ! save probortions (ln:sn)
 end
 
 Reductor.process = function(self)
@@ -603,6 +636,30 @@ Reductor.process = function(self)
 
 	self:createIntersectTable()
 	self:createColumnsTable()
+
+	local allLinesMap = {}
+	self.allLinesMap = allLinesMap
+
+	for _, note in ipairs(self.notes) do
+		allLinesMap[note.startTime] = true
+		allLinesMap[note.baseEndTime] = true
+	end
+
+	local allLines = {}
+	self.allLines = allLines
+
+	for time in pairs(allLinesMap) do
+		allLines[#allLines + 1] = time
+	end
+
+	table.sort(allLines)
+
+	for i, time in ipairs(allLines) do
+		allLinesMap[time] = i
+	end
+
+
+
 
 	local lines = {}
 	self.lines = lines
@@ -622,6 +679,7 @@ Reductor.process = function(self)
 	self:processPairs()
 
 	self:balanceLines()
+	-- try to optimize trills as jacks too
 
 	self:applyNotes()
 
@@ -631,6 +689,7 @@ Reductor.process = function(self)
 		else
 			note.deleted = true
 		end
+		-- note.endTime = note.startTime
 		note.endTime = note.baseEndTime
 	end
 
