@@ -1,5 +1,6 @@
 local NoteBlock = require("libchart.NoteBlock")
 local SolutionSeeker = require("libchart.SolutionSeeker")
+local enps = require("libchart.enps")
 
 local Reductor = {}
 
@@ -102,11 +103,69 @@ Reductor.overDiff = function(self, columnNotes, line)
 	return sum
 end
 
-local recursionLimitLines = 0
+-- Reductor.extOverDiff = function(self, columnNotes, line)
+-- 	local overlap = {}
+
+-- 	--[[
+-- 		0001111111 -> 0001
+-- 		0011111110 -> 0010
+-- 		0111111100 -> 0100
+-- 		1111111000 -> 1000
+		
+-- 		0001111 -> 0001
+-- 		0011110 -> 0010
+-- 		0111100 -> 0100
+-- 		1111000 -> 1000
+-- 	]]
+
+-- 	for i = 1, self.targetMode do
+-- 		overlap[i] = 0
+-- 		for _, note in ipairs(line) do
+-- 			local rate = intersectSegment(i, self.targetMode, note.columnIndex, self.columnCount)
+-- 			overlap[i] = overlap[i] + rate
+-- 		end
+-- 	end
+
+-- 	-- assert(#overlap == #columnNotes)
+-- 	-- local sum = 0
+-- 	-- for i = 1, #overlap do
+-- 	-- 	sum = sum + math.abs(
+-- 	-- 		overlap[i] - columnNotes[i]
+-- 	-- 	)
+-- 	-- end
+
+-- 	return sum
+end
+
+Reductor.lineExpDensity = function(self, columnNotes, line)
+	local overlap = {}
+
+	-- enps
+
+	-- for i = 1, self.targetMode do
+	-- 	overlap[i] = 0
+	-- 	for _, note in ipairs(line) do
+	-- 		local rate = intersectSegment(i, self.targetMode, note.columnIndex, self.columnCount)
+	-- 		overlap[i] = overlap[i] + rate
+	-- 	end
+	-- end
+
+	-- assert(#overlap == #columnNotes)
+	-- local sum = 0
+	-- for i = 1, #overlap do
+	-- 	sum = sum + math.abs(
+	-- 		overlap[i] - columnNotes[i]
+	-- 	)
+	-- end
+
+	return sum
+end
+
+local recursionLimitLines = 2
 Reductor.checkLine = function(self, lineIndex, lineCombinationId)
 	local rate = 1
 
-	local lines = self.notes[1].line.lines
+	local lines = self.lines
 	local line = lines[lineIndex]
 
 	if not line then
@@ -149,7 +208,9 @@ Reductor.checkLine = function(self, lineIndex, lineCombinationId)
 			end
 		end
 		-- print("select jackCount == 0", lineIndex, lineCombinationId)
-		return 1 / self:overDiff(columnNotes, line)
+		-- return 1 / self:overDiff(columnNotes, line) + 1 / self:extOverDiff(columnNotes, line)
+		-- return 1 / self:overDiff(columnNotes, line) -- * sum(expDensity) ??? + extOverDiff
+		return 1 / self:overDiff(columnNotes, line) + 1 / self:lineExpDensity(columnNotes, line)
 	end
 	-- if line.startTime == 277461 then
 	-- 	print("277461")
@@ -218,7 +279,12 @@ Reductor.reduceNotes = function(self, line)
 	for i = 1, self.targetMode do
 		columns[#columns + 1] = {i, overlap[i]}
 	end
-	table.sort(columns, function(a, b) return a[2] > b[2] end)
+	table.sort(columns, function(a, b)
+		if a[2] ~= b[2] then
+			return a[2] > b[2]
+		end
+		return a[1] < b[1]
+	end)
 
 	local minLnLength = math.huge
 	local sortedNotes = {}
@@ -230,12 +296,17 @@ Reductor.reduceNotes = function(self, line)
 		end
 	end
 	if minLnLength ~= math.huge then
-		print(minLnLength)
 		table.sort(sortedNotes, function(a, b)
 			local length1 = a.baseEndTime - a.startTime
 			local length2 = b.baseEndTime - b.startTime
 			if (length1 ~= 0 and length1 <= minLnLength + 10) and (length2 == 0 or length2 > minLnLength + 10) then
 				return true
+			end
+			if length1 == length2 then
+				return a.columnIndex < b.columnIndex
+			end
+			if length1 ~= 0 and length1 ~= 0 then
+				return length1 < length2
 			end
 		end)
 	end
@@ -337,7 +408,7 @@ end
 Reductor.preprocessPairs = function(self)
 	self.pairs = {}
 	local pairs = self.pairs
-	local lines = self.notes[1].line.lines
+	local lines = self.lines
 	for i = 1, #lines - 1 do
 		local pair = {}
 		pair.index = i
@@ -416,11 +487,18 @@ Reductor.applyLine = function(self, line, lineCombinationId)
 end
 
 Reductor.balanceLines = function(self)
+	local densityStacks = {}
+	self.densityStacks = densityStacks
+
+	for i = 1, self.targetMode do
+		densityStacks[i] = {0}
+	end
+
 	local checkLine = function(lineIndex, lineCombinationId)
 		return self:checkLine(lineIndex, lineCombinationId)
 	end
 
-	local lines = self.notes[1].line.lines
+	local lines = self.lines
 	local status, err = SolutionSeeker:solve(lines, 2 ^ self.targetMode, checkLine)
 	assert(status, err)
 
@@ -429,38 +507,70 @@ Reductor.balanceLines = function(self)
 	end
 end
 
-Reductor.reduceLongNotes = function(self)
--- 	local line = self.notes[1].line.first
--- 	local nextLine = line.next
--- 	while line do
--- 		for i = 1, self.targetMode do
--- 			local note1
--- 			for _, note in ipairs(line) do
--- 				if not note.deleted and note.columnIndex == i and note.endTime ~= note.startTime then
--- 					note1 = note
--- 					break
--- 				end
--- 			end
--- 			if note1 then
+Reductor.getNextLines = function(self, i, note)
+	local lines = self.lines
+	for j = i + 1, #lines - 2 do
+		local nextLine = lines[j]
+		for _, nextNote in ipairs(nextLine) do
+			if not nextNote.deleted and note.columnIndex == nextNote.columnIndex then
+				-- if note.startTime == 62331 and note.columnIndex == 1 then
+				-- 	print("getNextLines", note.columnIndex, note.startTime, nextNote.startTime)
+				-- 	print("notes:")
+				-- 	for _, note in ipairs(nextLine) do
+				-- 		if not note.deleted then
+				-- 			print("note", note.columnIndex)
+				-- 		end
+				-- 	end
+				-- end
+				return nextLine, lines[j - 1]
+			end
+		end
+	end
+	return lines[i + 1], lines[i]
+end
 
--- 			end
--- 		end
-		
--- 		line = nextLine
--- 		nextLine = line.next
--- 	end
+Reductor.reduceLongNotes = function(self)
+	local lines = self.lines
+	for i = 1, #lines - 1 do
+		local line = lines[i]
+		for _, note in ipairs(line) do
+			if not note.deleted and note.baseEndTime ~= note.startTime then
+				local nextLine, preNextLine = self:getNextLines(i, note)
+				-- if note.startTime == 62331 then
+				-- 	print("reduceLongNotes", nextLine[1].startTime, preNextLine[1].startTime)
+				-- end
+				if note.baseEndTime >= nextLine[1].startTime - 10 then
+					note.endTime = preNextLine[1].startTime
+					-- if note.startTime == 62331 then
+					-- 	print("reduce")
+					-- 	print("note", note.startTime, note.endTime, note.columnIndex)
+					-- end
+				end
+			end
+		end
+	end
 end
 
 Reductor.process = function(self)
-	local line = self.notes[1].line.first
-	while line do
+	local lines = {}
+	self.lines = lines
+
+	for _, line in ipairs(self.notes[1].line.lines) do
+		local newLine = {}
+		for _, note in ipairs(line) do
+			newLine[#newLine + 1] = note
+		end
+		lines[#lines + 1] = newLine
+	end
+
+	for _, line in ipairs(lines) do
 		self:reduceNotes(line)
-		line = line.next
 	end
 
 	self:preprocessPairs()
 	self:processPairs()
-	self:balanceLines()
+
+	self:balanceLines() -- combine with another overlap function
 
 	for _, note in ipairs(self.notes) do
 		note.columnIndex = note.suggestedColumn or 0
