@@ -35,7 +35,7 @@ end
 
 
 -- if #line1 differs from #line2, save difference, don't make identical lines
-local recursionLimit = 8
+local recursionLimit = 0
 Reductor.check = function(self, pairIndex, combinationId)
 	local _pairs = self.pairs
 	local rate = 1
@@ -140,7 +140,7 @@ Reductor.lineExpDensities = function(self, time)
 	return densities
 end
 
-local recursionLimitLines = 8
+local recursionLimitLines = 0
 Reductor.checkLine = function(self, lineIndex, lineCombinationId)
 	local lines = self.lines
 	local columnsTable = self.columnsTable
@@ -240,7 +240,7 @@ Reductor.checkLine = function(self, lineIndex, lineCombinationId)
 	return rate
 end
 
-Reductor.processLine = function(self, line)
+Reductor.processLine = function(self, line) -- accepted
 	local intersectTable = self.intersectTable
 	local targetMode = self.targetMode
 	local overlap = {}
@@ -305,6 +305,11 @@ Reductor.preprocessPair = function(self, i)
 	pair.jackCount = jackCount
 	pair.line2.jackCount = jackCount
 
+	--[[
+		combinationId is in [1;targetMode^2]
+		combination is a pair {noteCount1;noteCount2}
+		combinationId = (noteCount1 - 1) * targetMode + noteCount2
+	]]
 	local combinations = {}
 	for j = 1, pair.line1.maxNoteCount do
 		for k = 1, pair.line2.maxNoteCount do
@@ -316,10 +321,11 @@ Reductor.preprocessPair = function(self, i)
 				if ratio > 1 then
 					ratio = 1 / ratio
 				end
+				-- ratio is from [0; 1], greater is better
 
 				combination.ratio = ratio
 				combination.sum = j + k
-				combination.id = (j - 1) * self.targetMode + i
+				combination.id = (j - 1) * self.targetMode + k
 			end
 		end
 	end
@@ -339,7 +345,7 @@ Reductor.preprocessPair = function(self, i)
 	end)
 end
 
-Reductor.preprocessPairs = function(self)
+Reductor.preprocessPairs = function(self) -- accepted
 	self.pairs = {}
 	local pairs = self.pairs
 	local lines = self.lines
@@ -372,6 +378,7 @@ Reductor.processPairs = function(self)
 		return self:check(pairIndex, combinationId)
 	end
 
+	-- #lanes can be reduced here
 	local status, err = SolutionSeeker:solve(self.pairs, self.targetMode ^ 2, check)
 	assert(status, err)
 
@@ -421,6 +428,13 @@ Reductor.balanceLines = function(self)
 	end
 
 	local lines = self.lines
+	-- reduce #lanes based on pair combinations
+	--[[
+		#lanes = targetMode! / (nextNoteCount! * (targetMode - nextNoteCount)!)
+		(4 2) = 1*2*3*4 / (1*2 * 1*2) = 3*4 / (1*2) = 6 (not 16)
+		(10 5) = 252 (not 1024)
+		How to enumerate?
+	]]
 	local status, err = SolutionSeeker:solve(lines, 2 ^ self.targetMode, checkLine)
 	assert(status, err)
 
@@ -500,7 +514,7 @@ Reductor.reduceLongNotes = function(self)
 	end
 end
 
-Reductor.preprocessLine = function(self, line)
+Reductor.preprocessLine = function(self, line) -- accepted
 	local baseNotes = {}
 	line.baseNotes = baseNotes
 
@@ -637,6 +651,8 @@ Reductor.process = function(self)
 	self:createIntersectTable()
 	self:createColumnsTable()
 
+
+	-- allLines and allLinesMap are for reduceLongNotes
 	local allLinesMap = {}
 	self.allLinesMap = allLinesMap
 
@@ -657,9 +673,7 @@ Reductor.process = function(self)
 	for i, time in ipairs(allLines) do
 		allLinesMap[time] = i
 	end
-
-
-
+	--------------------------------------------------------------------------------
 
 	local lines = {}
 	self.lines = lines
@@ -667,16 +681,16 @@ Reductor.process = function(self)
 	for _, line in ipairs(self.notes[1].line.lines) do
 		local newLine = {}
 		newLine.baseLine = line
-		self:preprocessLine(newLine)
+		self:preprocessLine(newLine) -- accepted
 		lines[#lines + 1] = newLine
 	end
 
 	for _, line in ipairs(lines) do
-		self:processLine(line)
+		self:processLine(line) -- accepted
 	end
 
-	self:preprocessPairs()
-	self:processPairs()
+	self:preprocessPairs() -- accepted
+	self:processPairs() -- accepted
 
 	self:balanceLines()
 	-- try to optimize trills as jacks too
