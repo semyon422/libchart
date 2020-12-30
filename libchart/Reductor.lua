@@ -21,176 +21,189 @@ local intersectSegment = function(tc, tm, bc, bm)
 	) * tm
 end
 
-Reductor.getPrevNoteIndex = function(self, i, lane)
-	for k = i - 1, 1, -1 do
-		local cnote = self.notes[k]
-		if cnote.seeker.lane == lane then
-			return k
-		end
-	end
-end
-
-Reductor.getPrevNote = function(self, i, lane)
-	return self.notes[self:getPrevNoteIndex(i, lane)]
-end
-
-Reductor.getDelta = function(self, i, lane)
-	local startTime = self.notes[i].startTime
-	local prevNoteIndex = self:getPrevNoteIndex(i, lane)
-	if prevNoteIndex then
-		return math.max(0, startTime - self.notes[prevNoteIndex].endTime)
-	end
-	return startTime
-end
-
-Reductor.checkHorizontalSpacing = function(self, i, lane)
-	local note = self.notes[i]
-
-	local rates = {}
-	for columnIndex = 1, self.targetMode do
-		rates[columnIndex] = 1
-	end
-
-	for columnIndex = 1, self.targetMode do
-		local prevNoteIndex = self:getPrevNoteIndex(i, lane)
-
-		if prevNoteIndex then
-			local prevNote = self.notes[prevNoteIndex]
-
-			local deltaTime = note.startTime - prevNote.endTime
-			if deltaTime <= 0 then
-				rates[columnIndex] = 0
-
-				local distance = note.distance[prevNote]
-				for columnIndex2 = 1, self.targetMode do
-					if not distance then break end
-					if
-						rates[columnIndex2] > 0 and
-						math.abs(columnIndex2 - prevNote.columnIndex) >= math.abs(distance) and
-						(columnIndex2 - prevNote.columnIndex) * distance > 0
-					then
-						rates[columnIndex2] = rates[columnIndex2]
-					else
-						rates[columnIndex2] = 0
-					end
-				end
-			end
-		end
-	end
-
-	return rates[lane]
-end
-
-Reductor.checkVerticalSpacing = function(self, i, lane)
-	local note = self.notes[i]
-	local prevNote = self:getPrevNote(i, lane)
-
-	if not prevNote then
-		return 1
-	end
-
-	local basePrevNote = note.bottom
-	if basePrevNote then
-		local baseDelta = note.startTime - basePrevNote.endTime
-		local delta = note.startTime - prevNote.endTime
-
-		if delta < baseDelta then
-			return 0
-		end
-	end
-
-	local nextNote = note
-	note = prevNote
-
-	local baseNextNote = note.top
-	if baseNextNote then
-		local baseDelta = baseNextNote.startTime - note.endTime
-		local delta = nextNote.startTime - note.endTime
-
-		if delta < baseDelta then
-			print(123123123)
-			return 0
-		end
-	end
-
-	return 1
-end
-
-local recursionLimit = 1
-Reductor.check = function(self, noteIndex, lane)
+local recursionLimit = 6
+Reductor.check = function(self, pairIndex, combinationId)
 	local rate = 1
 
-	local note = self.notes[noteIndex]
+	local pair = self.pairs[pairIndex]
 
-	if not note then
+	if not pair then
 		return rate
 	end
 
-	rate = rate * intersectSegment(lane, self.targetMode, note.columnIndex, self.columnCount)
-	if rate == 0 then return rate end
+	local combination = pair.combinations[combinationId]
+	if not combination then
+		return 0
+	end
 
-	rate = rate * self:getDelta(noteIndex, lane) / 1000
-	if rate == 0 then return rate end
+	local prevPair = self.pairs[pairIndex - 1]
+	if not prevPair then
+		return combination.sum * combination.ratio
+	end
 
-	rate = rate * self:checkHorizontalSpacing(noteIndex, lane)
-	if rate == 0 then return rate end
+	local lane = prevPair.appliedCombination or prevPair.seeker.lane
+	if prevPair.combinations[lane][2] ~= combination[1] then
+		return 0
+	end
 
-	rate = rate * self:checkVerticalSpacing(noteIndex, lane)
+	rate = rate * combination.sum * combination.ratio
 	if rate == 0 then return rate end
 
 	if recursionLimit ~= 0 then
 		recursionLimit = recursionLimit - 1
+		pair.appliedCombination = combinationId
 		local maxNextRate = 0
-		for i = 1, self.targetMode do
-			maxNextRate = math.max(maxNextRate, self:check(noteIndex + 1, i))
+		for i = 1, self.targetMode ^ 2 do
+			maxNextRate = math.max(maxNextRate, self:check(pairIndex + 1, i))
 		end
 		rate = rate * maxNextRate
 		recursionLimit = recursionLimit + 1
+		pair.appliedCombination = nil
 	end
 
 	return rate
 end
 
--- Reductor.reduceNotes = function(self, line)
--- 	local savedNotes = {}
--- 	local columns = {}
--- 	for i = 1, self.targetMode do
--- 		local notes = {}
--- 		for _, note in ipairs(line) do
--- 			-- print("check", i, note.columnIndex)
--- 			local rate = 1 -- change later
--- 			local rateSegment = intersectSegment(i, self.targetMode, note.columnIndex, self.columnCount)
--- 			-- print(rateSegment, i, self.targetMode, note.columnIndex, self.columnCount)
--- 			if rate * rateSegment > 0 and not savedNotes[note] then
--- 				-- print("good", i, note.columnIndex)
--- 				-- note.r_rate = 1
--- 				note.r_rate = rate * rateSegment
--- 				notes[#notes + 1] = note
--- 			end
--- 		end
--- 		table.sort(notes, function(a, b) return a.r_rate > b.r_rate end)
--- 		local note = notes[1]
--- 		if note and not savedNotes[note] then
--- 			note.suggestedColumn = i
--- 			columns[i] = note
--- 			savedNotes[note] = true
--- 		end
--- 	end
+Reductor.getColumns = function(self, lineCombinationId)
+	local notes = {}
+	for i = 1, self.targetMode do
+		notes[i] = bit.band(bit.rshift(lineCombinationId, i - 1), 1)
+	end
 
--- 	for _, note in ipairs(line) do
--- 		if not savedNotes[note] then
--- 			note.deleted = true
--- 		end
--- 	end
--- end
+	local columns = {}
+	for i = 1, self.targetMode do
+		if notes[i] == 1 then
+			columns[#columns + 1] = i
+		end
+	end
+
+	return columns, notes
+end
+
+Reductor.overDiff = function(self, columnNotes, line)
+	local overlap = {}
+
+	for i = 1, self.targetMode do
+		overlap[i] = 0
+		for _, note in ipairs(line) do
+			local rate = intersectSegment(i, self.targetMode, note.columnIndex, self.columnCount)
+			overlap[i] = overlap[i] + rate
+		end
+	end
+
+	assert(#overlap == #columnNotes)
+	local sum = 0
+	for i = 1, #overlap do
+		sum = sum + math.abs(
+			overlap[i] - columnNotes[i]
+		)
+	end
+
+	return sum
+end
+
+local recursionLimitLines = 0
+Reductor.checkLine = function(self, lineIndex, lineCombinationId)
+	local rate = 1
+
+	local lines = self.notes[1].line.lines
+	local line = lines[lineIndex]
+
+	if not line then
+		return rate
+	end
+
+	local columns, columnNotes = self:getColumns(lineCombinationId)
+
+	local j = 0
+	for _, note in ipairs(line) do
+		if not note.deleted then
+			j = j + 1
+		end
+	end
+
+	if #columns ~= j then
+		-- print("#columns ~= j", lineIndex, lineCombinationId)
+		return 0
+	end
+
+	local prevLine = lines[lineIndex - 1]
+	if not prevLine then
+		-- print("not prevLine", lineIndex, lineCombinationId)
+		return 1 / self:overDiff(columnNotes, line)
+	end
+
+	local lane = prevLine.appliedLineCombinationId or prevLine.seeker.lane
+	local columnsPrev, columnNotesPrev = self:getColumns(lane)
+
+	local jackCount = line.jackCount or 0
+	if jackCount == 0 then
+		for i = 1, self.targetMode do
+			-- print("lane", prevLine.appliedLineCombinationId, prevLine.seeker.lane)
+			-- print("columnNotes[i]", unpack(columnNotes))
+			-- print("columnNotesPrev[i]", unpack(columnNotesPrev))
+			if columnNotes[i] == columnNotesPrev[i] and columnNotes[i] == 1 then
+				-- print(i, lane, prevLine.appliedLineCombinationId, prevLine.seeker.lane)
+				-- print("jackCount == 0 but here is jack", lineIndex, lineCombinationId)
+				return 0
+			end
+		end
+		-- print("select jackCount == 0", lineIndex, lineCombinationId)
+		return 1 / self:overDiff(columnNotes, line)
+	end
+	-- if line.startTime == 277461 then
+	-- 	print("277461")
+	-- end
+
+	local hasJack = false
+	local actualJackCount = 0
+	for i = 1, self.targetMode do
+		if columnNotes[i] == columnNotesPrev[i] and columnNotes[i] == 1 then
+		-- if columnNotes[i] == columnNotesPrev[i] then
+			hasJack = true
+			actualJackCount = actualJackCount + 1
+		end
+	end
+	if not hasJack then
+		-- print("jackCount ~= 0 but here is no jack", lineIndex, lineCombinationId)
+		return 0
+	end
+	-- if line.startTime == 277461 then
+	-- 	print(hasJack, lineCombinationId, actualJackCount, jackCount)
+	-- end
+
+	if actualJackCount > jackCount then
+		-- print("actualJackCount > jackCount", lineIndex, lineCombinationId)
+		return 0
+	end
+
+	-- print("select full", lineIndex, lineCombinationId)
+
+	rate = rate * 1 / self:overDiff(columnNotes, line)
+
+	if recursionLimitLines ~= 0 then
+		recursionLimitLines = recursionLimitLines - 1
+		line.appliedLineCombinationId = lineCombinationId
+		local maxNextRate = 0
+		for i = 1, 2 ^ self.targetMode do
+			maxNextRate = math.max(maxNextRate, self:checkLine(lineIndex + 1, i))
+		end
+		rate = rate * maxNextRate
+		recursionLimitLines = recursionLimitLines + 1
+		line.appliedLineCombinationId = nil
+	end
+
+	return rate
+end
 
 Reductor.reduceNotes = function(self, line)
 	local overlap = {}
 
 	for i = 1, self.targetMode do
+		overlap[i] = 0
 		for _, note in ipairs(line) do
 			local rate = intersectSegment(i, self.targetMode, note.columnIndex, self.columnCount)
-			overlap[i] = (overlap[i] or 0) + rate
+			overlap[i] = overlap[i] + rate
 		end
 	end
 
@@ -207,14 +220,35 @@ Reductor.reduceNotes = function(self, line)
 	end
 	table.sort(columns, function(a, b) return a[2] > b[2] end)
 
+	local minLnLength = math.huge
+	local sortedNotes = {}
+	for _, note in ipairs(line) do
+		sortedNotes[#sortedNotes + 1] = note
+		local length = note.baseEndTime - note.startTime
+		if length > 0 then
+			minLnLength = math.min(minLnLength, length)
+		end
+	end
+	if minLnLength ~= math.huge then
+		print(minLnLength)
+		table.sort(sortedNotes, function(a, b)
+			local length1 = a.baseEndTime - a.startTime
+			local length2 = b.baseEndTime - b.startTime
+			if (length1 ~= 0 and length1 <= minLnLength + 10) and (length2 == 0 or length2 > minLnLength + 10) then
+				return true
+			end
+		end)
+	end
+
 	local maxNoteCount = math.min(countOverlap, #line)
 	for i = 1, maxNoteCount do
 		local column = columns[i][1]
-		line[i].suggestedColumn = column
-		line[i].saved = true
+		sortedNotes[i].suggestedColumn = column
+		sortedNotes[i].saved = true
 	end
 	line.overlap = overlap
 	line.maxNoteCount = maxNoteCount
+	line.sortedNotes = sortedNotes
 
 	for _, note in ipairs(line) do
 		if not note.saved then
@@ -261,6 +295,8 @@ Reductor.preprocessPair = function(self, i)
 
 	local jackCount = self:getJackCount(i)
 	-- print("jackCount pair" .. i, jackCount)
+	pair.jackCount = jackCount
+	pair.line2.jackCount = jackCount
 
 	local combinations = {}
 	for j = 1, pair.line1.maxNoteCount do
@@ -275,6 +311,8 @@ Reductor.preprocessPair = function(self, i)
 				end
 
 				combination.ratio = ratio
+				combination.sum = j + k
+				combination.id = (j - 1) * self.targetMode + i
 			end
 		end
 	end
@@ -293,7 +331,7 @@ Reductor.preprocessPair = function(self, i)
 		end
 	end)
 
-	print("pair" .. i, unpack(combinations[1]))
+	-- print("pair" .. i, unpack(combinations[1]))
 end
 
 Reductor.preprocessPairs = function(self)
@@ -312,11 +350,11 @@ end
 
 Reductor.applyPair = function(self, pair, i)
 	local combination = pair.combinations[i]
-	print("apply pair" .. pair.index, i, unpack(combination))
+	-- print("apply pair" .. pair.index, i, unpack(combination))
 	pair.appliedCombination = i
 
 	local n1 = 0
-	for _, note in ipairs(pair.line1) do
+	for _, note in ipairs(pair.line1.sortedNotes) do
 		if not note.deleted then
 			if n1 < combination[1] then
 				n1 = n1 + 1
@@ -329,24 +367,88 @@ Reductor.applyPair = function(self, pair, i)
 	pair.applied = true
 end
 
-Reductor.processPairs = function(self)
-	local pairs = self.pairs
-	local pair = pairs[1]
-	self:applyPair(pair, 1)
-	for i = 1, #pairs - 1 do
-		local pair = pairs[i]
-		local nextPair = pairs[i + 1]
-		for j = 1, #nextPair.combinations do
-			if pair.combinations[pair.appliedCombination][2] == nextPair.combinations[j][1] then
-				self:applyPair(nextPair, j)
-				break
+Reductor.applyLastPair = function(self, pair, i)
+	local combination = pair.combinations[pair.appliedCombination]
+	-- print("apply last pair" .. pair.index, i, unpack(combination))
+
+	local n1 = 0
+	for _, note in ipairs(pair.line2) do
+		if not note.deleted then
+			if n1 < combination[2] then
+				n1 = n1 + 1
+			else
+				note.deleted = true
 			end
 		end
-		if not nextPair.applied then
-			error("unapplied")
-			self:applyPair(nextPair, 1)
+	end
+
+	pair.applied = true
+end
+
+Reductor.processPairs = function(self)
+	local check = function(pairIndex, combinationId)
+		return self:check(pairIndex, combinationId)
+	end
+
+	local status, err = SolutionSeeker:solve(self.pairs, self.targetMode ^ 2, check)
+	assert(status, err)
+
+	for _, pair in ipairs(self.pairs) do
+		self:applyPair(pair, pair.seeker.lane)
+	end
+	self:applyLastPair(self.pairs[#self.pairs])
+end
+
+local bit = require("bit")
+Reductor.applyLine = function(self, line, lineCombinationId)
+	local columns = self:getColumns(lineCombinationId)
+
+	local i = 0
+	for _, note in ipairs(line) do
+		if not note.deleted then
+			i = i + 1
+			note.suggestedColumn = columns[i]
+			assert(columns[i])
 		end
 	end
+
+	assert(#columns == i)
+end
+
+Reductor.balanceLines = function(self)
+	local checkLine = function(lineIndex, lineCombinationId)
+		return self:checkLine(lineIndex, lineCombinationId)
+	end
+
+	local lines = self.notes[1].line.lines
+	local status, err = SolutionSeeker:solve(lines, 2 ^ self.targetMode, checkLine)
+	assert(status, err)
+
+	for _, line in ipairs(lines) do
+		self:applyLine(line, line.seeker.lane)
+	end
+end
+
+Reductor.reduceLongNotes = function(self)
+-- 	local line = self.notes[1].line.first
+-- 	local nextLine = line.next
+-- 	while line do
+-- 		for i = 1, self.targetMode do
+-- 			local note1
+-- 			for _, note in ipairs(line) do
+-- 				if not note.deleted and note.columnIndex == i and note.endTime ~= note.startTime then
+-- 					note1 = note
+-- 					break
+-- 				end
+-- 			end
+-- 			if note1 then
+
+-- 			end
+-- 		end
+		
+-- 		line = nextLine
+-- 		nextLine = line.next
+-- 	end
 end
 
 Reductor.process = function(self)
@@ -358,10 +460,14 @@ Reductor.process = function(self)
 
 	self:preprocessPairs()
 	self:processPairs()
+	self:balanceLines()
 
 	for _, note in ipairs(self.notes) do
 		note.columnIndex = note.suggestedColumn or 0
+		note.endTime = note.baseEndTime
 	end
+
+	self:reduceLongNotes()
 end
 
 return Reductor
