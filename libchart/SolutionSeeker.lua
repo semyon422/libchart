@@ -1,7 +1,15 @@
 local SolutionSeeker = {}
 
-local sortRates = function(a, b)
-	return a[2] > b[2]
+-- local sortRates = function(a, b)
+-- 	return a[2] > b[2]
+-- end
+
+SolutionSeeker.onForward = function(self, lane)
+
+end
+
+SolutionSeeker.onBackward = function(self)
+
 end
 
 SolutionSeeker.solve = function(self, notes, laneCount, check)
@@ -16,8 +24,9 @@ SolutionSeeker.solve = function(self, notes, laneCount, check)
 		if not seeker then
 			seeker = {}
 			note.seeker = seeker
+			seeker.note = note
 		end
-		
+
 		local lanes = seeker.lanes
 		if not lanes then
 			lanes = {}
@@ -34,26 +43,35 @@ SolutionSeeker.solve = function(self, notes, laneCount, check)
 			for lane = 1, laneCount do
 				rates[#rates + 1] = {lane, check(noteIndex, lane)}
 			end
-			table.sort(rates, sortRates)
+			-- table.sort(rates, sortRates)
 		end
 
+		local topLane
+		local topRate = 0
 		for k = 1, #rates do
 			local lane = rates[k][1]
 			local rate = rates[k][2]
-			if lanes[lane] == 0 and rate > 0 then
-				lanes[lane] = 1
-				seeker.lane = lane
-				break
+			if lanes[lane] == 0 and rate > topRate then
+				topLane = lane
+				topRate = rate
 			end
 		end
+
+		if topLane then
+			lanes[topLane] = 1
+			seeker.lane = topLane
+		end
+
 		if seeker.lane then
-			print("forward", noteIndex, seeker.lane)
+			-- print("forward", noteIndex, seeker.lane)
 			noteIndex = noteIndex + 1
+			self:onForward(seeker)
 		else
 			-- for i = 1, laneCount do
 			-- 	print(rates[i][1], rates[i][2])
 			-- end
 			-- io.read()
+			self:onBackward()
 			seeker.lanes = nil
 			seeker.rates = nil
 			local prevNote = notes[noteIndex - 1]
