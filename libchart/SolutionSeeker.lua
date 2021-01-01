@@ -4,16 +4,16 @@ local SolutionSeeker = {}
 -- 	return a[2] > b[2]
 -- end
 
-SolutionSeeker.onForward = function(self, lane)
+SolutionSeeker.onForward = function(self, seeker)
 
 end
 
-SolutionSeeker.onBackward = function(self)
+SolutionSeeker.onBackward = function(self, seeker)
 
 end
 
-SolutionSeeker.solve = function(self, notes, laneCount, check)
-	local noteIndex = 1
+SolutionSeeker.solve = function(self, notes, laneCount, check, startNoteIndex)
+	local noteIndex = startNoteIndex or 1
 	while true do
 		local note = notes[noteIndex]
 		if not note then
@@ -71,7 +71,7 @@ SolutionSeeker.solve = function(self, notes, laneCount, check)
 			-- 	print(rates[i][1], rates[i][2])
 			-- end
 			-- io.read()
-			self:onBackward()
+			self:onBackward(seeker)
 			seeker.lanes = nil
 			seeker.rates = nil
 			local prevNote = notes[noteIndex - 1]
