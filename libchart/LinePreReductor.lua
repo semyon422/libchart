@@ -62,6 +62,7 @@ LinePreReductor.processLine = function(self, line)
 	else
 		line.noteCount = 0
 		line.time = 0
+		line.reducedNoteCount = 0
 	end
 
 	line.shortNoteCount = shortNoteCount

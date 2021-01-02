@@ -1,5 +1,3 @@
-local SolutionSeeker = require("libchart.SolutionSeeker")
-
 local NoteCountReductor = {}
 
 NoteCountReductor.new = function(self)
@@ -13,7 +11,6 @@ end
 
 local recursionLimit = 8
 NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
-	-- print("check", linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
 	local rate = 1
 
@@ -28,18 +25,12 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 		return rate
 	end
 
-	-- print("prevPair", prevLinePair.bestLine2NoteCount, prevLinePair.line1.time)
-	-- print("pair", linePair.bestLine2NoteCount, linePair.line1.time)
-	-- local combinationId = (prevPair.bestLine2NoteCount - 1) * self.targetMode + line2NoteCount
-	-- print(prevLinePair.bestLine2NoteCount, line2NoteCount)
 	local combination = linePair.combinations[prevLinePair.bestLine2NoteCount][line2NoteCount]
 
 	if not combination then
-		-- print("not combination", prevLinePair.bestLine2NoteCount, line2NoteCount)
 		return 0
 	end
 
-	-- print("combination.ratio", combination.ratio)
 	rate = rate * combination.sum * combination.ratio
 	if rate == 0 then return rate end
 
@@ -87,24 +78,12 @@ NoteCountReductor.getJackCount = function(self, linePairIndex)
 end
 
 NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
-	-- if linePairIndex == 0 then
-	-- 	return {
-	-- 		jackCount = 0,
-	-- 		combinations = {}
-	-- 	}
-	-- end
-
 	local linePairs = self.linePairs
 	local pair = linePairs[linePairIndex]
 
 	local jackCount = self:getJackCount(linePairIndex)
 	pair.jackCount = jackCount
 
-	--[[
-		combinationId is in [1;targetMode^2]
-		combination is a pair {noteCount1;noteCount2}
-		combinationId = (noteCount1 - 1) * targetMode + noteCount2
-	]]
 	local combinations = {}
 	for j = 1, pair.line1.maxReducedNoteCount do
 		local subCombinations = {}
@@ -116,13 +95,11 @@ NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
 
 				local ratio = (j / k) / (pair.line1.noteCount / pair.line2.noteCount)
 				if ratio > 1 then
-					ratio = 1 / ratio
+					ratio = 1 / ratio -- ratio is from [0; 1], greater is better
 				end
-				-- ratio is from [0; 1], greater is better
 
 				combination.ratio = ratio
 				combination.sum = j + k
-				-- combination.id = (j - 1) * self.targetMode + k
 			end
 		end
 	end
@@ -132,7 +109,7 @@ NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
 		local subCombinations = {}
 		combinations[0] = subCombinations
 		for k = 1, pair.line2.maxReducedNoteCount do
-			combinations[k] = {
+			subCombinations[k] = {
 				[1] = 0,
 				[2] = k,
 				ratio = 1,
@@ -140,22 +117,6 @@ NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
 			}
 		end
 	end
-
-	-- Return this back!!!
-	-- for j = 1, pair.line1.maxReducedNoteCount do
-	-- 	table.sort(combinations[j], function(a, b) -- rework
-	-- 		if a.ratio ~= b.ratio then
-	-- 			return a.ratio > b.ratio
-	-- 		end
-
-	-- 		if a[1] == a[2] and b[1] ~= b[2] then
-	-- 			return true
-	-- 		end
-	-- 		if a[1] == a[2] and b[1] == b[2] then
-	-- 			return a[1] > b[1]
-	-- 		end
-	-- 	end)
-	-- end
 end
 
 NoteCountReductor.preprocessLinePairs = function(self)
@@ -181,22 +142,43 @@ NoteCountReductor.preprocessLinePairs = function(self)
 end
 
 NoteCountReductor.processLinePairs = function(self)
+	local linePairs = self.linePairs
 	for linePairIndex = 0, #self.linePairs do
-		local linePair = self.linePairs[linePairIndex]
+		local linePair = linePairs[linePairIndex]
 
-		local rates = {}
+		local rateCases = {}
 		for line2NoteCount = 1, self.targetMode do
-			rates[#rates + 1] = {line2NoteCount, self:check(linePairIndex, line2NoteCount)}
+			local rateCase = {}
+			rateCase.rate = self:check(linePairIndex, line2NoteCount)
+			rateCase.combination = linePair.combinations[linePair.line1.reducedNoteCount][line2NoteCount]
+			rateCases[line2NoteCount] = rateCase
 		end
 
-		local bestLine2NoteCount
-		local bestRate = 0
-		for k = 1, #rates do
-			local line2NoteCount = rates[k][1]
-			local rate = rates[k][2]
-			if rate > bestRate then
-				bestLine2NoteCount = line2NoteCount
-				bestRate = rate
+		local bestLine2NoteCount = 1
+		local bestCombination = rateCases[1].combination
+		local bestRate = rateCases[1].rate
+		for line2NoteCount = 2, self.targetMode do
+			local rateCase = rateCases[line2NoteCount]
+			local rate = rateCase.rate
+			local combination = rateCase.combination
+
+			if combination then
+				local currentIsBetter = false
+				if rate > bestRate then
+					currentIsBetter = true
+				elseif rate == bestRate then
+					if combination.ratio ~= bestCombination.ratio then
+						currentIsBetter = combination.ratio > bestCombination.ratio
+					end
+					if combination[1] == combination[2] and bestCombination[1] == bestCombination[2] then
+						currentIsBetter = combination[1] > bestCombination[1]
+					end
+				end
+				if currentIsBetter then
+					bestLine2NoteCount = line2NoteCount
+					bestRate = rate
+					bestCombination = combination
+				end
 			end
 		end
 
@@ -207,8 +189,10 @@ end
 
 --[[
 	This method is for recursionLimit = 0
+	Old, need rework
 ]]
 -- NoteCountReductor.processLinePairs = function(self)
+--	local SolutionSeeker = require("libchart.SolutionSeeker")
 -- 	local check = function(linePairIndex, line2NoteCount)
 -- 		return self:check(linePairIndex, line2NoteCount)
 -- 	end
