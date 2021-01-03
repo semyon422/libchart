@@ -9,10 +9,8 @@ NoteCountReductor.new = function(self)
 	return noteCountReductor
 end
 
---[[
-	recursionLimit should be greater than 0
-]]
-local recursionLimit = 8
+local recursionLimit = 500
+local recursionDepth = 0
 NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
 	local rate = 1
@@ -26,24 +24,42 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 		return 0
 	end
 
-	rate = rate * combination.sum * combination.ratio
+	if
+		math.abs(linePair.line1.reducedNoteCount - line2NoteCount) - math.abs(linePair.line1.noteCount - linePair.line2.noteCount) >= 1 or
+		(linePair.line1.reducedNoteCount - line2NoteCount) * (linePair.line1.noteCount - linePair.line2.noteCount) < 0
+	then
+		return 0
+	end
+	rate = rate * combination.sum
 	if rate == 0 then return rate end
 
 	local nextLinePair = linePairs[linePairIndex + 1]
-	if recursionLimit ~= 0 and nextLinePair then
-		recursionLimit = recursionLimit - 1
+	-- if recursionDepth > -8 and nextLinePair then
+	if recursionLimit >= 1 and nextLinePair then
+		local maxNextLine2NoteCount = math.min(
+			nextLinePair.line2.maxReducedNoteCount,
+			self.targetMode + nextLinePair.jackCount - line2NoteCount
+		)
+		if maxNextLine2NoteCount == 0 then
+			return 0
+		end
+		recursionDepth = recursionDepth - 1
+		recursionLimit = recursionLimit / maxNextLine2NoteCount
+
 		linePair.bestLine2NoteCount = line2NoteCount
 		linePair.line2.reducedNoteCount = line2NoteCount
 
 		local maxNextRate = 0
-		for nextLine2NoteCount = 1, math.min(nextLinePair.line2.maxReducedNoteCount, self.targetMode + nextLinePair.jackCount - line2NoteCount) do
+		for nextLine2NoteCount = 1, maxNextLine2NoteCount do
 			maxNextRate = math.max(maxNextRate, self:check(linePairIndex + 1, nextLine2NoteCount))
 		end
 		rate = rate * maxNextRate
 
-		recursionLimit = recursionLimit + 1
 		linePair.bestLine2NoteCount = nil
 		linePair.line2.reducedNoteCount = nil
+
+		recursionDepth = recursionDepth + 1
+		recursionLimit = recursionLimit * maxNextLine2NoteCount
 	end
 
 	return rate
@@ -144,8 +160,13 @@ NoteCountReductor.processLinePairs = function(self)
 	local linePairs = self.linePairs
 	for linePairIndex = 0, #self.linePairs do
 		local linePair = linePairs[linePairIndex]
+		local nextLinePair = linePairs[linePairIndex + 1]
 
-		local maxLine2NoteCount = math.min(linePair.line2.maxReducedNoteCount, self.targetMode + linePair.jackCount - linePair.line1.reducedNoteCount)
+		local maxLine2NoteCount = math.min(
+			linePair.line2.maxReducedNoteCount,
+			self.targetMode + linePair.jackCount - linePair.line1.reducedNoteCount,
+			self.targetMode + (nextLinePair and nextLinePair.jackCount - 1 or 0)
+		)
 
 		local rateCases = {}
 		for line2NoteCount = 1, maxLine2NoteCount do
