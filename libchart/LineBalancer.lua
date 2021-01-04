@@ -146,9 +146,8 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 		local prevLineCombinationIndex = prevLine.appliedLineCombinationIndex or prevLine.bestLineCombinationIndex
 		local columnNotesPrev = lineCombinationsMap[prevLine.reducedNoteCount][prevLineCombinationIndex]
 
-		local jackCount = line.pair1.jackCount
-		-- print("checkLine", lineIndex, prevLine.reducedNoteCount, prevLineCombinationIndex, jackCount)
-		if jackCount == 0 then
+		local reducedJackCount = line.pair1.reducedJackCount
+		if reducedJackCount == 0 then
 			for i = 1, targetMode do
 				if combinationMap[i] == columnNotesPrev[i] and combinationMap[i] == 1 then
 					return 0
@@ -167,7 +166,12 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 				return 0
 			end
 
-			if actualJackCount > jackCount then
+			local jackCount = line.pair1.jackCount
+			if
+				actualJackCount > reducedJackCount or
+				actualJackCount / line.reducedNoteCount < 1 and jackCount / #line.combination == 1 or
+				actualJackCount / reducedJackCount < jackCount / #line.combination -- doubtful
+			then
 				return 0
 			end
 		end
@@ -199,19 +203,17 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 		rate = rate * (1 / densitySum)
 	end
 
-	-- if recursionLimitLines ~= 0 and lines[lineIndex + 1] then
 	local nextLine = lines[lineIndex + 1]
 	if recursionLimit >= 1 and nextLine then
 		local combinationsCount = self.lineCombinationsCountTable[nextLine.reducedNoteCount]
 
 		recursionDepth = recursionDepth - 1
 		recursionLimit = recursionLimit / combinationsCount
-		-- print(recursionDepth, recursionLimit)
 
 		line.appliedLineCombinationIndex = lineCombinationIndex
 
 		local maxNextRate = 0
-		for i = 1,combinationsCount do
+		for i = 1, combinationsCount do
 			maxNextRate = math.max(maxNextRate, self:checkLine(lineIndex + 1, i))
 		end
 		rate = rate * maxNextRate
@@ -267,10 +269,6 @@ LineBalancer.balanceLines = function(self)
 
 		local time = assert(line.time)
 		local columnNotes = self.lineCombinationsMap[line.reducedNoteCount][bestLineCombinationIndex]
-		-- print("balanceLines", lineIndex, line.reducedNoteCount, bestLineCombinationIndex, #rates)
-		-- print(time)
-		-- print(line.pair1.jackCount, line.pair2.jackCount)
-		-- print(line.pair1.index, line.pair2.index)
 
 		local lineExpDensities = self:lineExpDensities(time)
 		for i = 1, self.targetMode do
