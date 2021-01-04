@@ -13,27 +13,27 @@ local recursionLimit = 1000
 local recursionDepth = 0
 NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
-	local rate = 1
+	local rate = 0
 
 	local linePair = linePairs[linePairIndex]
+	local nextLinePair = linePairs[linePairIndex + 1]
 
 	local combination = assert(linePair.combinations[linePair.line1.reducedNoteCount][line2NoteCount])
 
+	local delta = linePair.line1.noteCount - linePair.line2.noteCount
+	local reducedDelta = linePair.line1.reducedNoteCount - line2NoteCount
 	if
-		math.abs(linePair.line1.reducedNoteCount - line2NoteCount) - math.abs(linePair.line1.noteCount - linePair.line2.noteCount) >= 1 or
-		(linePair.line1.reducedNoteCount - line2NoteCount) * (linePair.line1.noteCount - linePair.line2.noteCount) < 0
+		math.abs(reducedDelta) - math.abs(delta) > 0 or
+		reducedDelta * delta < 0
 	then
 		return 0
 	end
-	rate = rate * combination.sum
-	if rate == 0 then return rate end
+	rate = rate + combination.sum
 
-	local nextLinePair = linePairs[linePairIndex + 1]
-	-- if recursionDepth > -8 and nextLinePair then
 	if recursionLimit >= 1 and nextLinePair then
 		local maxNextLine2NoteCount = math.min(
 			nextLinePair.line2.maxReducedNoteCount,
-			self.targetMode + nextLinePair.jackCount - line2NoteCount
+			self.targetMode + nextLinePair.preReducedJackCount - line2NoteCount
 		)
 		if maxNextLine2NoteCount == 0 then
 			return 0
@@ -48,7 +48,7 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 		for nextLine2NoteCount = 1, maxNextLine2NoteCount do
 			maxNextRate = math.max(maxNextRate, self:check(linePairIndex + 1, nextLine2NoteCount))
 		end
-		rate = rate * maxNextRate
+		rate = rate + maxNextRate
 
 		linePair.bestLine2NoteCount = nil
 		linePair.line2.reducedNoteCount = nil
@@ -60,7 +60,7 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 	return rate
 end
 
-NoteCountReductor.getJackCount = function(self, linePairIndex)
+NoteCountReductor.processJackCount = function(self, linePairIndex)
 	local linePair = self.linePairs[linePairIndex]
 
 	local notes = {}
@@ -85,21 +85,24 @@ NoteCountReductor.getJackCount = function(self, linePairIndex)
 		end
 	end
 
-	return math.min(overlapsCount, jackCount)
+	linePair.jackCount = jackCount
+	linePair.overlapsCount = overlapsCount
+	linePair.preReducedJackCount = math.min(overlapsCount, jackCount)
 end
 
 NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
 	local linePairs = self.linePairs
 	local linePair = linePairs[linePairIndex]
 
-	local jackCount = self:getJackCount(linePairIndex)
-	linePair.jackCount = jackCount
+	self:processJackCount(linePairIndex)
+	local preReducedJackCount = linePair.preReducedJackCount
+
 	local combinations = {}
 	for j = 1, linePair.line1.maxReducedNoteCount do
 		local subCombinations = {}
 		combinations[j] = subCombinations
 		for k = 1, linePair.line2.maxReducedNoteCount do
-			if j + k <= self.targetMode + jackCount then
+			if j + k <= self.targetMode + preReducedJackCount then
 				local combination = {j, k}
 				subCombinations[k] = combination
 
@@ -159,8 +162,8 @@ NoteCountReductor.processLinePairs = function(self)
 
 		local maxLine2NoteCount = math.min(
 			linePair.line2.maxReducedNoteCount,
-			self.targetMode + linePair.jackCount - linePair.line1.reducedNoteCount,
-			self.targetMode + (nextLinePair and nextLinePair.jackCount - 1 or 0)
+			self.targetMode + linePair.preReducedJackCount - linePair.line1.reducedNoteCount,
+			self.targetMode + (nextLinePair and nextLinePair.preReducedJackCount - 1 or 0)
 		)
 
 		local rateCases = {}
@@ -203,6 +206,11 @@ NoteCountReductor.processLinePairs = function(self)
 
 		linePair.bestLine2NoteCount = bestLine2NoteCount
 		linePair.line2.reducedNoteCount = bestLine2NoteCount
+		linePair.reducedJackCount = math.min(
+			linePair.preReducedJackCount,
+			linePair.line1.reducedNoteCount,
+			linePair.line2.reducedNoteCount
+		)
 	end
 end
 
