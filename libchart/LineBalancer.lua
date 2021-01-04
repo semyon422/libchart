@@ -12,24 +12,6 @@ LineBalancer.new = function(self)
 	return lineBalancer
 end
 
-local intersectSegment = function(tc, tm, bc, bm)
-	return (
-		math.max((tc - 1) / tm, math.min(tc / tm, bc / bm)) -
-		math.min(tc / tm, math.max((tc - 1) / tm, (bc - 1) / bm))
-	) * tm
-end
-
-LineBalancer.createIntersectTable = function(self)
-	local intersectTable = {}
-	for i = 1, self.targetMode do
-		intersectTable[i] = {}
-		for j = 1, self.columnCount do
-			intersectTable[i][j] = intersectSegment(i, self.targetMode, j, self.columnCount)
-		end
-	end
-	self.intersectTable = intersectTable
-end
-
 local factorial
 factorial = function(n)
 	return n == 0 and 1 or n * factorial(n - 1)
@@ -115,24 +97,12 @@ LineBalancer.createLineCombinationsCountTable = function(self)
 	self.lineCombinationsCountTable = lineCombinationsCountTable
 end
 
-LineBalancer.overDiff = function(self, columnNotes, columns)
-	local intersectTable = self.intersectTable
-	local overlap = {}
-
-	for i = 1, self.targetMode do
-		overlap[i] = 0
-		local intersectSubTable = intersectTable[i]
-		for j = 1, #columns do
-			local rate = intersectSubTable[columns[j]]
-			overlap[i] = overlap[i] + rate
-		end
-	end
-
-	assert(#overlap == #columnNotes)
+LineBalancer.overDiff = function(self, combinationMap, overlap)
 	local sum = 0
+
 	for i = 1, #overlap do
 		sum = sum + math.abs(
-			overlap[i] - columnNotes[i]
+			overlap[i] - combinationMap[i]
 		)
 	end
 
@@ -152,7 +122,8 @@ LineBalancer.lineExpDensities = function(self, time)
 	return densities
 end
 
-local recursionLimitLines = 8
+local recursionLimit = 1000
+local recursionDepth = 0
 LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 	local lines = self.lines
 	local lineCombinationsMap = self.lineCombinationsMap
@@ -164,14 +135,9 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 	end
 
 	local columns = lineCombinationsTable[line.reducedNoteCount][lineCombinationIndex]
-	local columnNotes = lineCombinationsMap[line.reducedNoteCount][lineCombinationIndex]
+	local combinationMap = lineCombinationsMap[line.reducedNoteCount][lineCombinationIndex]
 
-	if #columns ~= line.reducedNoteCount then
-		print(unpack(columns))
-		print(line.reducedNoteCount)
-		error(123)
-		return 0
-	end
+	assert(#columns == line.reducedNoteCount)
 
 	local targetMode = self.targetMode
 
@@ -184,7 +150,7 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 		-- print("checkLine", lineIndex, prevLine.reducedNoteCount, prevLineCombinationIndex, jackCount)
 		if jackCount == 0 then
 			for i = 1, targetMode do
-				if columnNotes[i] == columnNotesPrev[i] and columnNotes[i] == 1 then
+				if combinationMap[i] == columnNotesPrev[i] and combinationMap[i] == 1 then
 					return 0
 				end
 			end
@@ -192,7 +158,7 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 			local hasJack = false
 			local actualJackCount = 0
 			for i = 1, targetMode do
-				if columnNotes[i] == columnNotesPrev[i] and columnNotes[i] == 1 then
+				if combinationMap[i] == columnNotesPrev[i] and combinationMap[i] == 1 then
 					hasJack = true
 					actualJackCount = actualJackCount + 1
 				end
@@ -213,7 +179,7 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 	local lineExpDensities = self:lineExpDensities(time)
 	local densityStacks = self.densityStacks
 	for i = 1, targetMode do
-		if columnNotes[i] == 1 then
+		if combinationMap[i] == 1 then
 			local stack = densityStacks[i]
 			stack[#stack + 1] = {
 				time,
@@ -222,9 +188,8 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 			densitySum = densitySum + lineExpDensities[i]
 		end
 	end
-	-- densitySum = 0
 
-	local overDiff = self:overDiff(columnNotes, line.combination)
+	local overDiff = self:overDiff(combinationMap, line.overlap)
 
 	local rate = 1
 	if overDiff > 0 then
@@ -234,22 +199,31 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 		rate = rate * (1 / densitySum)
 	end
 
-	if recursionLimitLines ~= 0 and lines[lineIndex + 1] then
-		recursionLimitLines = recursionLimitLines - 1
+	-- if recursionLimitLines ~= 0 and lines[lineIndex + 1] then
+	local nextLine = lines[lineIndex + 1]
+	if recursionLimit >= 1 and nextLine then
+		local combinationsCount = self.lineCombinationsCountTable[nextLine.reducedNoteCount]
+
+		recursionDepth = recursionDepth - 1
+		recursionLimit = recursionLimit / combinationsCount
+		-- print(recursionDepth, recursionLimit)
+
 		line.appliedLineCombinationIndex = lineCombinationIndex
 
 		local maxNextRate = 0
-		for i = 1, self.lineCombinationsCountTable[lines[lineIndex + 1].reducedNoteCount] do
+		for i = 1,combinationsCount do
 			maxNextRate = math.max(maxNextRate, self:checkLine(lineIndex + 1, i))
 		end
 		rate = rate * maxNextRate
 
-		recursionLimitLines = recursionLimitLines + 1
 		line.appliedLineCombinationIndex = nil
+
+		recursionDepth = recursionDepth + 1
+		recursionLimit = recursionLimit * combinationsCount
 	end
 
 	for i = 1, targetMode do
-		if columnNotes[i] == 1 then
+		if combinationMap[i] == 1 then
 			local stack = densityStacks[i]
 			stack[#stack] = nil
 		end
@@ -269,16 +243,19 @@ LineBalancer.balanceLines = function(self)
 	local lines = self.lines
 
 	for lineIndex, line in ipairs(lines) do
+		local lineCombinationsCount = self.lineCombinationsCountTable[line.reducedNoteCount]
+
 		local rates = {}
-		for lineCombinationIndex = 1, self.lineCombinationsCountTable[line.reducedNoteCount] do
-			rates[#rates + 1] = {lineCombinationIndex, self:checkLine(lineIndex, lineCombinationIndex)}
+		for lineCombinationIndex = 1, lineCombinationsCount do
+			recursionLimit = recursionLimit / lineCombinationsCount
+			rates[lineCombinationIndex] = self:checkLine(lineIndex, lineCombinationIndex)
+			recursionLimit = recursionLimit * lineCombinationsCount
 		end
 
 		local bestLineCombinationIndex
 		local bestRate = 0
-		for k = 1, #rates do
-			local lineCombinationIndex = rates[k][1]
-			local rate = rates[k][2]
+		for lineCombinationIndex = 1, lineCombinationsCount do
+			local rate = rates[lineCombinationIndex]
 			if rate > bestRate then
 				bestLineCombinationIndex = lineCombinationIndex
 				bestRate = rate
@@ -312,11 +289,7 @@ LineBalancer.process = function(self, lines, columnCount, targetMode)
 	self.lines = lines
 	self.columnCount = columnCount
 	self.targetMode = targetMode
-	-- local Profiler = require("aqua.util.Profiler")
-	-- local profiler = Profiler:new()
-	-- profiler:start()
 
-	self:createIntersectTable()
 	self:createLineCombinationsCountTable()
 	self:createLineCombinationsTable()
 	self:createLineCombinationsMap()
@@ -332,8 +305,6 @@ LineBalancer.process = function(self, lines, columnCount, targetMode)
 	--[[
 		lineCombinations
 	]]
-
-	-- profiler:stop()
 end
 
 return LineBalancer
