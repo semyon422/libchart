@@ -9,7 +9,7 @@ NoteCountReductor.new = function(self)
 	return noteCountReductor
 end
 
-local recursionLimit = 500
+local recursionLimit = 1000
 local recursionDepth = 0
 NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
@@ -17,12 +17,7 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 
 	local linePair = linePairs[linePairIndex]
 
-	local combination = linePair.combinations[linePair.line1.reducedNoteCount][line2NoteCount]
-
-	if not combination then
-		error("not combination")
-		return 0
-	end
+	local combination = assert(linePair.combinations[linePair.line1.reducedNoteCount][line2NoteCount])
 
 	if
 		math.abs(linePair.line1.reducedNoteCount - line2NoteCount) - math.abs(linePair.line1.noteCount - linePair.line2.noteCount) >= 1 or
@@ -170,10 +165,12 @@ NoteCountReductor.processLinePairs = function(self)
 
 		local rateCases = {}
 		for line2NoteCount = 1, maxLine2NoteCount do
+			recursionLimit = recursionLimit / maxLine2NoteCount
 			local rateCase = {}
 			rateCase.rate = self:check(linePairIndex, line2NoteCount)
 			rateCase.combination = linePair.combinations[linePair.line1.reducedNoteCount][line2NoteCount]
 			rateCases[line2NoteCount] = rateCase
+			recursionLimit = recursionLimit * maxLine2NoteCount
 		end
 
 		local bestLine2NoteCount = 1
