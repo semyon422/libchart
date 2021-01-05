@@ -11,27 +11,27 @@ end
 NotePreprocessor.process = function(self, notes)
 	local lines = {}
 	local lanes = {}
-	
+
 	for i = 1, self.columnCount do
 		lanes[i] = {}
 	end
-	
+
 	local laneLineIndex = {}
-	
+
 	for i = 1, #notes do
 		local note = notes[i]
 		local line = lines[note.startTime] or {}
 		lines[note.startTime] = line
 		line.startTime = note.startTime
 		local lane = lanes[note.columnIndex]
-		
+
 		line[note.columnIndex] = note
 		lane[note.startTime] = note
-		
+
 		note.line = line
 		note.lane = lane
 	end
-	
+
 	local lineIndex = {}
 	for _, line in pairs(lines) do
 		lineIndex[#lineIndex + 1] = line
@@ -42,7 +42,7 @@ NotePreprocessor.process = function(self, notes)
 	local longNotes = {}
 	for i = 1, #lineIndex do
 		local line = lineIndex[i]
-		
+
 		for i = 1, self.columnCount do
 			if longNotes[i] then
 				if longNotes[i].endTime < line.startTime then
@@ -76,7 +76,7 @@ NotePreprocessor.process = function(self, notes)
 			end
 		end
 	end
-	
+
 	local newLines = {}
 	for _, line in pairs(lines) do
 		local newLine = {}
@@ -93,7 +93,7 @@ NotePreprocessor.process = function(self, notes)
 	table.sort(lines, function(a, b)
 		return a.startTime < b.startTime
 	end)
-	
+
 	local newLanes = {}
 	for i = 1, self.columnCount do
 		local lane = lanes[i]
@@ -111,10 +111,11 @@ NotePreprocessor.process = function(self, notes)
 		end)
 		lanes[i] = newLane
 	end
-	
+
 	for i = 1, #lines do
 		local line = lines[i]
 		table.sort(line, sortLine)
+		line.lines = lines
 		line.prev = lines[i - 1]
 		line.next = lines[i + 1]
 		line.first = lines[i]
@@ -129,10 +130,11 @@ NotePreprocessor.process = function(self, notes)
 			laneLineIndex[note.lanePos .. ":" .. note.linePos] = note
 		end
 	end
-	
+
 	for i = 1, #lanes do
 		local lane = lanes[i]
 		table.sort(lane, sortLane)
+		lane.lanes = lanes
 		lane.prev = lanes[i - 1]
 		lane.next = lanes[i + 1]
 		lane.first = lanes[i]
@@ -159,8 +161,8 @@ NotePreprocessor.process = function(self, notes)
 			end
 		end
 	end
-	
-	
+
+
 	for _, line in ipairs(lines) do
 		for i, baseNote in ipairs(line) do
 			if baseNote.note then
@@ -174,7 +176,7 @@ NotePreprocessor.process = function(self, notes)
 			end
 		end
 	end
-	
+
 	self.lines = lines
 	self.lanes = lanes
 end
