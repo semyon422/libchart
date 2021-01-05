@@ -1,6 +1,8 @@
 local LinePreReductor = require("libchart.LinePreReductor")
 local NoteCountReductor = require("libchart.NoteCountReductor")
 local LineBalancer = require("libchart.LineBalancer")
+local NoteApplyer = require("libchart.NoteApplyer")
+local LongNoteReductor = require("libchart.LongNoteReductor")
 
 local Reductor = {}
 
@@ -13,6 +15,8 @@ Reductor.new = function(self)
 	reductor.noteCountReductor = NoteCountReductor:new()
 	reductor.linePreReductor = LinePreReductor:new()
 	reductor.lineBalancer = LineBalancer:new()
+	reductor.noteApplyer = NoteApplyer:new()
+	reductor.longNoteReductor = LongNoteReductor:new()
 
 	setmetatable(reductor, Reductor_metatable)
 
@@ -47,6 +51,16 @@ Reductor.exportLineCombination = function(self, lines)
 	return notes
 end
 
+Reductor.exportNotes = function(self, lines)
+	local notes = {}
+	for _, note in ipairs(self.notes) do
+		if note.reducedColumnIndex then
+			notes[#notes + 1] = note
+		end
+	end
+	return notes
+end
+
 Reductor.process = function(self, notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount
@@ -54,30 +68,18 @@ Reductor.process = function(self, notes, columnCount, targetMode)
 
 	-- line.maxReducedNoteCount
 	local lines = self.linePreReductor:getLines(notes, columnCount, targetMode)
-	-- return self:exportLines(lines)
 
 	-- line.reducedNoteCount
 	self.noteCountReductor:process(lines, columnCount, targetMode)
-	-- return self:exportLines(lines)
 
 	-- line.bestLineCombination
 	self.lineBalancer:process(lines, columnCount, targetMode)
-	return self:exportLineCombination(lines)
 
-	-- 
+	self.noteApplyer:process(notes, lines, columnCount, targetMode)
 
-	
+	self.longNoteReductor:process(notes, lines, columnCount, targetMode)
 
-	-- local notes2 = {}
-	-- for _, note in ipairs(nc.noteData) do
-	-- 	if not note.deleted then
-	-- 		notes2[#notes2 + 1] = note
-	-- 	end
-	-- end
-	-- local notes = {}
-
-
-	-- return self:exportLines(lines)
+	return self:exportNotes(lines)
 end
 
 return Reductor
