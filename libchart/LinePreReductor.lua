@@ -34,13 +34,12 @@ LinePreReductor.processLine = function(self, line)
 	local overlap = {}
 	local baseNotes = {}
 	local combination = {}
+	local appliedSuggested = {}
 
 	line.overlap = overlap
 	line.baseNotes = baseNotes
 	line.combination = combination
-
-	-- local appliedSuggested = {}
-	-- line.appliedSuggested = appliedSuggested
+	line.appliedSuggested = appliedSuggested
 
 	local shortNoteCount = 0
 	local longNoteCount = 0
