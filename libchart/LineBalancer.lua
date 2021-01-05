@@ -169,7 +169,7 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 			local jackCount = line.pair1.jackCount
 			if
 				actualJackCount > reducedJackCount or
-				actualJackCount / line.reducedNoteCount < 1 and jackCount / #line.combination == 1 or
+				actualJackCount / line.reducedNoteCount < 1 and jackCount / #line.combination == 1 or -- see NoteCountReductor.check
 				actualJackCount / reducedJackCount < jackCount / #line.combination -- doubtful
 			then
 				return 0
