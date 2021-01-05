@@ -29,6 +29,11 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 		return 0
 	end
 	rate = rate + combination.sum
+	--[[
+		TODO:
+		apply math.abs(reducedDelta) - math.abs(delta) > 0 only for jacked and not jacked lines, > 1? for combined
+		or use soft rule?
+	]]
 
 	if recursionLimit >= 1 and nextLinePair then
 		local maxNextLine2NoteCount = math.min(
