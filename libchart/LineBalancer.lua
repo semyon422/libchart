@@ -122,7 +122,7 @@ LineBalancer.lineExpDensities = function(self, time)
 	return densities
 end
 
-local recursionLimit = 1000
+local recursionLimit = 100
 local recursionDepth = 0
 LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 	local lines = self.lines
