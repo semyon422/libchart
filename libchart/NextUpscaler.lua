@@ -1,4 +1,3 @@
-local NoteBlock = require("libchart.NoteBlock")
 local SolutionSeeker = require("libchart.SolutionSeeker")
 
 local NextUpscaler = {}
@@ -40,7 +39,7 @@ NextUpscaler.getDelta = function(self, i, lane)
 	if prevNoteIndex then
 		return math.max(0, startTime - self.notes[prevNoteIndex].endTime)
 	end
-	return startTime
+	return startTime + 1000
 end
 
 NextUpscaler.checkHorizontalSpacing = function(self, i, lane)
@@ -108,7 +107,6 @@ NextUpscaler.checkVerticalSpacing = function(self, i, lane)
 		local delta = nextNote.startTime - note.endTime
 
 		if delta < baseDelta then
-			print(123123123)
 			return 0
 		end
 	end
@@ -116,7 +114,7 @@ NextUpscaler.checkVerticalSpacing = function(self, i, lane)
 	return 1
 end
 
-local recursionLimit = 1
+local recursionLimit = 0
 NextUpscaler.check = function(self, noteIndex, lane)
 	local rate = 1
 
@@ -138,6 +136,7 @@ NextUpscaler.check = function(self, noteIndex, lane)
 	rate = rate * self:checkVerticalSpacing(noteIndex, lane)
 	if rate == 0 then return rate end
 
+	-- disabled, recursion is not completed
 	if recursionLimit ~= 0 then
 		recursionLimit = recursionLimit - 1
 		local maxNextRate = 0
@@ -156,7 +155,6 @@ NextUpscaler.process = function(self)
 		return self:check(noteIndex, lane)
 	end
 
-	print(self.notes, self.targetMode)
 	local status, err = SolutionSeeker:solve(self.notes, self.targetMode, check)
 	assert(status, err)
 
