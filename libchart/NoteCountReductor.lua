@@ -93,6 +93,9 @@ NoteCountReductor.processJackCount = function(self, linePairIndex)
 	linePair.jackCount = jackCount
 	linePair.overlapsCount = overlapsCount
 	linePair.preReducedJackCount = math.min(overlapsCount, jackCount)
+	if self.targetMode == 1 then
+		linePair.preReducedJackCount = math.max(linePair.preReducedJackCount, 1)
+	end
 end
 
 NoteCountReductor.preprocessLinePair = function(self, linePairIndex)

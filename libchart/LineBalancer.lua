@@ -258,7 +258,7 @@ LineBalancer.balanceLines = function(self)
 		local bestRate = 0
 		for lineCombinationIndex = 1, lineCombinationsCount do
 			local rate = rates[lineCombinationIndex]
-			if rate > bestRate then
+			if not bestLineCombinationIndex or rate > bestRate then
 				bestLineCombinationIndex = lineCombinationIndex
 				bestRate = rate
 			end
