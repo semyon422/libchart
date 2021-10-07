@@ -42,7 +42,8 @@ end
 
 	nextDelayObject {
 		1110 .... / object type 14 == 1110 is delay object
-		     0000 / delay = [0, 15] seconds
+			 0000 / delay = [0, 15] seconds (v1)
+		     0000 / delay = [-8, 7] seconds (v2)
 	}
 ]]
 
@@ -156,7 +157,7 @@ NanoChart.encode = function(self, hash, inputs, notes)
 	table.sort(notes, sortNotes)
 
 	local objects = {
-		byte.int8_to_string(1),
+		byte.int8_to_string(2),
 		assert(#hash == 16 and hash),
 		byte.int8_to_string(inputs)
 	}
@@ -168,9 +169,12 @@ NanoChart.encode = function(self, hash, inputs, notes)
 		local note = notes[i]
 
 		local noteOffset = math.floor(note.time)
-		while offset < noteOffset do
-			local delta = math.min(noteOffset - offset, 15)
+		while offset ~= noteOffset do
+			local delta = math.min(math.max(noteOffset - offset, -8), 7)
 			offset = offset + delta
+			if delta < 0 then
+				delta = delta + 16
+			end
 			objects[#objects + 1] = byte.int8_to_string(0xe0 + delta)
 		end
 
@@ -213,7 +217,11 @@ NanoChart.decode = function(self, content)
 
 		local input = bit.rshift(bit.band(cbyte, 0xf0), 4)
 		if input == 14 then
-			offset = offset + bit.band(cbyte, 0xf)
+			local delta = bit.band(cbyte, 0xf)
+			if version == 2 and delta > 7 then
+				delta = delta - 16
+			end
+			offset = offset + delta
 		elseif input == 15 then
 			notes[#notes + 1] = {
 				time = offset + noteTime / 1024,
