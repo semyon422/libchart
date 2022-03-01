@@ -154,7 +154,7 @@ assert(tohex(NanoChart:encodeNote(128, 0, true, 1/128)) == "f480")		-- 111101001
 
 local sortNotes = function(a, b) return a.time < b.time or a.time == b.time and a.input < b.input end
 NanoChart.encode = function(self, hash, inputs, notes)
-	table.sort(notes, sortNotes)
+	-- table.sort(notes, sortNotes)
 
 	local objects = {
 		byte.int8_to_string(2),
