@@ -9,6 +9,7 @@ normalscore.accuracy_sum = 0
 normalscore.mean = 0
 normalscore.deviation = 0
 normalscore.score = 0
+normalscore.score_adjusted = 0
 
 function normalscore:new()
 	return setmetatable({}, {__index = self})
