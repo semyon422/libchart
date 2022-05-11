@@ -27,7 +27,7 @@ function normalscore:hit(delta_time, hit_timing_window)
 	end
 
 	local score_squared = self.variance
-	if self.miss_count >= 0 then
+	if self.miss_count > 0 then
 		local N = self.hit_count + self.miss_count
 		local hit_ratio = self.hit_count / N
 		local s = erfunc.erfinv(hit_ratio)
