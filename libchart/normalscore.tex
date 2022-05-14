@@ -1,0 +1,258 @@
+\documentclass[12pt]{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+\begin{document}
+
+\section*{Normalscore v2}
+
+\subsection*{Definition}
+
+\[ h = (h_1, ..., h_H) \]
+\[ t_L \leq h_i \leq t_R \]
+\[
+s^2 =
+\frac{1}{N} \sum_{i = 1}^{H} h_i^2 + \Sigma_m
+\]
+
+\begin{equation}
+\Sigma_m = \int_{(-\infty, t_L) \cup (t_R, \infty)} t^2 n_m(t) \,dt
+\label{eq:def_Sigma_m}
+\end{equation}
+
+\[
+M / N = \int_{(-\infty, t_L) \cup (t_R, \infty)} n_m(t) \,dt
+\]
+
+\subsection*{\href{https://en.wikipedia.org/wiki/Normal_distribution}{Normal distribution}}
+
+\[
+n_m(t) = \frac{1}{\sigma_m\sqrt{2 \pi }} e^{-t^2/2\sigma_m^2} \quad (\mu = 0)
+\]
+
+\subsection*{\href{https://en.wikipedia.org/wiki/Error_function}{Error function}}
+
+\[
+\operatorname{erf} x = \frac{2}{\sqrt{\pi}} \int_{0}^{x} e^{-t^2} \,dt
+\quad\quad
+\operatorname{erf}'x = \frac{2}{\sqrt{\pi}} e^{-x^{2}}
+\]
+
+\subsection*{\href{https://tvims.nsu.ru/chernova/tv/lec/node46.htmln}{E\(\xi^2\)}}
+
+\[
+\text{E}\xi^2 = \int_{-\infty}^{\infty} x^2 e^{-x^2/2} \,dx =
+\frac{2}{\sqrt{2\pi}} \int_{0}^{\infty} x^2 e^{-x^2/2} \,dx =
+-\frac{2}{\sqrt{2\pi}} \int_{0}^{\infty} x \,de^{-x^2/2} =
+\]
+
+\[
+= \left. -\frac{2x}{\sqrt{2\pi}} e^{-x^2/2} \right|_0^\infty +
+2 \int_{0}^{\infty} \frac{1}{\sqrt{2\pi}} e^{-x^2/2} \,dx = 0 + 1 = 1
+\]
+
+\subsection*{\href{https://en.wikipedia.org/wiki/Variance}{Variance}}
+
+\begin{equation}
+\operatorname{Var} (X) = \operatorname {E} \left[(X-\operatorname {E} [X])^{2}\right] = \operatorname {E} \left[X^{2}\right]-\operatorname {E} [X]^{2}
+\label{eq:def_Variance}
+\end{equation}
+
+\begin{equation}
+\operatorname {Var} (X+Y)=\operatorname {Var} (X)+\operatorname {Var} (Y)
+\label{eq:def_Variance_sum}
+\end{equation}
+
+\pagebreak
+
+\subsection*{Derivation}
+
+Redefine \( M / N \) as follows:
+\begin{equation}
+M / N = 1 - H / N =
+1 - \int_{t_L}^{t_R} n(t, 0, \sigma_m) \,dt
+\end{equation}
+
+Derive \( H / N \):
+\[
+H / N = \int_{t_L}^{t_R} n_m(t) \,dt =
+\int_{t_L}^{t_R} \frac{1}{\sigma_m\sqrt{2\pi}} \exp\left(-\frac{t^2}{2\sigma_m^2} \right) \,dt =
+\]
+\[
+= \frac{1}{\sqrt{\pi}} \int_{t_L}^{t_R} \exp\left(-\frac{t^2}{2\sigma_m^2} \right) \,d\left(\frac{t}{\sigma_m\sqrt{2}}\right) =
+\frac{1}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau
+\]
+
+Now apply the error function to the above:
+\[
+H / N = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau =
+\frac{1}{2} \left[ \operatorname{erf}\left(\frac{t_R}{\sigma_m\sqrt{2}}\right) - \operatorname{erf}\left(\frac{t_L}{\sigma_m\sqrt{2}}\right) \right]
+\]
+
+Using the above, we can derive \(\sigma_m\).
+If \(t_R = -t_L = t_0\) then
+\[
+H / N = \operatorname{erf}\left(\frac{t_0}{\sigma_m\sqrt{2}}\right)
+\]
+\[
+\operatorname{erf}\left(H / N\right) = \frac{t_0}{\sigma_m\sqrt{2}} = \tau_0
+\]
+\[
+\sigma_m = \frac{t_0}{\operatorname{erf}\left(H / N\right)\sqrt{2}} = \frac{t_0}{\tau_0\sqrt{2}}
+\]
+
+Else we can derive \(\sigma_m\) using \href{https://en.wikipedia.org/wiki/Newton%27s_method}{Newton's method}:
+\[
+f(\sigma_m) = \frac{1}{2} \left[
+    \operatorname{erf}\left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
+    \operatorname{erf}\left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+\right] - H / N
+\]
+\[
+f'(\sigma_m) = \frac{1}{\sigma_m^2\sqrt{2\pi}} \left(
+    t_L e^{-t_L^2/2\sigma_m^2} -
+    t_R e^{-t_R^2/2\sigma_m^2}
+\right)
+\]
+\[
+    x_{n+1}=x_{n}-{\frac {f(x_{n})}{f'(x_{n})}}
+\]
+
+
+Define \( \sigma_m \) using \(\Sigma_m\) \eqref{eq:def_Sigma_m} and \eqref{eq:def_Variance_sum} as follows:
+\[
+\sigma_m^2 = \int_{-\infty}^{\infty} t^2 n_m(t) \,dt =
+\Sigma_m + \int_{t_L}^{t_R} t^2 n_m(t) \,dt
+\]
+
+Rearrange:
+\[
+\Sigma_m = \sigma_m^2 - \int_{t_L}^{t_R} t^2 n_m(t) \,dt
+\]
+\[
+\int_{t_L}^{t_R} t^2 n_m(t) \,dt =
+\int_{t_L}^{t_R} t^2 \frac{1}{\sigma\sqrt{2 \pi }} \exp\left(-\frac{t^2}{2\sigma^2} \right) \,dt =
+\]
+\[
+    = \frac{\sigma_m^2}{\sqrt{2\pi}}
+    \int_{t_L}^{t_R}
+    \left(\frac{t}{\sigma_m}\right)^2
+    \exp\left(-\frac{t^2}{2\sigma^2} \right)
+    \,d\left(\frac{t}{\sigma_m}\right) =
+\]
+\[
+    = \frac{\sigma_m^2}{\sqrt{2\pi}}
+    \frac{\sqrt{2\pi}}{2}
+    \frac{2}{\sqrt{2\pi}}
+    \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+    \tau^2
+    \exp\left(-\frac{\tau^2}{2} \right)
+    \,d\tau =
+\]
+\[
+    = \frac{\sigma_m^2}{\sqrt{2\pi}}
+    \frac{\sqrt{2\pi}}{2}
+    \left\{
+        \left.
+        -\frac{2x}{\sqrt{2\pi}} e^{-x^2/2}
+        \right|_{t_L/\sigma_m}^{t_R/\sigma_m} +
+        2 \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+        \frac{1}{\sqrt{2\pi}} e^{-x^2/2} \,dx
+    \right\} =
+\]
+\[
+    = \frac{\sigma_m^2}{2}
+    \left\{
+        -\frac{2t_R}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_R^2}{2\sigma_m^2}} +
+        \frac{2t_L}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_L^2}{2\sigma_m^2}} +
+        \frac{2}{\sqrt{2\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+        e^{-x^2/2} \,dx
+    \right\}
+\]
+
+Solve the integral:
+\[
+    \frac{2}{\sqrt{2\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+    e^{-x^2/2} \,dx =
+    \frac{2}{\sqrt{\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+    e^{-x^2/2} \,d\left(\frac{x}{\sqrt{2}}\right) =
+\]
+\[
+    = \frac{2}{\sqrt{\pi}} \int_{t_L/\sigma_m\sqrt{2}}^{t_R/\sigma_m\sqrt{2}}
+    e^{-t^2} \,dt =
+    \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
+    \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+\]
+
+Return back to \(\Sigma_m\):
+\[
+\Sigma_m = \sigma_m^2 -
+\frac{\sigma_m^2}{2}
+\left\{
+    -\frac{2t_R}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_R^2}{2\sigma_m^2}} +
+    \frac{2t_L}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_L^2}{2\sigma_m^2}} +
+    \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
+    \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+\right\} =
+\]
+\[
+= \sigma_m^2
+\left\{
+    1 +
+    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
+    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}} -
+    \frac{1}{2} \left(
+        \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
+        \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+    \right)
+\right\} =
+\]
+\[
+= \sigma_m^2
+\left\{
+    1 +
+    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
+    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}} -
+    \frac{H}{N}
+\right\}
+\]
+
+Finally, we have:
+\[
+s^2 =
+\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
+\sigma_m^2
+\left\{
+    \frac{M}{N} +
+    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
+    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}}
+\right\}
+\]
+
+If \(t_R = -t_L = t_0\) then we can simplify the above to:
+\[
+s^2 =
+\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
+\left(\frac{t_0}{\tau_0\sqrt{2}}\right)^2
+\left\{
+    \frac{M}{N} +
+    \frac{2}{\sqrt{\pi}} \frac{t_0}{\sigma_m\sqrt{2}} e^{-\frac{t_0^2}{2\sigma_m^2}}
+\right\}
+\]
+\[
+s^2 =
+\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
+\frac{1}{2}
+\left(\frac{t_0}{\tau_0}\right)^2
+\left\{
+    \frac{M}{N} +
+    \frac{2}{\sqrt{\pi}} \tau_0 e^{-\tau_0^2}
+\right\}
+\]
+
+If \(\mu \neq 0\) we can adjust the accuracy using \eqref{eq:def_Variance}:
+\[
+s_a^2 = s^2 - \left[ \frac{1}{H} \sum_{i = 1}^{H} h_i \right]^2
+\]
+
+\end{document}
