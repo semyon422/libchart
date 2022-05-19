@@ -1,8 +1,8 @@
--- note per second extended
+-- extended notes per second
 
 local enps = {}
 
-local test = true
+local test = false
 
 --[[
 	expDensity = f(deltaTime, previousDensity)
@@ -38,12 +38,11 @@ local test = true
 		where note1.input == note2.input
 ]]
 
-local expDensity = function(t, c)
+function enps.expDensity(t, c)
 	return c == 0 and math.exp(-t) or (c + 1) / (1 / c + 1) ^ (c * t)
 end
-enps.expDensity = expDensity
 
-local noteStrain = function(notes)
+function enps.noteStrain(notes)
 	local lastNotes = {}
 	local strains = {}
 	local sumStrain = 0
@@ -51,7 +50,7 @@ local noteStrain = function(notes)
 	for _, note in ipairs(notes) do
 		if lastNotes[note.input] then
 			note.lastNote = lastNotes[note.input]
-			note.strain = expDensity(note.time - note.lastNote.time, note.lastNote.strain)
+			note.strain = enps.expDensity(note.time - note.lastNote.time, note.lastNote.strain)
 		else
 			note.strain = note.strain or 0
 		end
@@ -63,9 +62,8 @@ local noteStrain = function(notes)
 
 	return sumStrain / #notes, strains
 end
-enps.noteStrain = noteStrain
 
-local generalizedKeymode = function(notes)
+function enps.generalizedKeymode(notes)
 	local dict = {}
 
 	for _, note in ipairs(notes) do
@@ -90,19 +88,17 @@ local generalizedKeymode = function(notes)
 
 	return sum / weight
 end
-enps.generalizedKeymode = generalizedKeymode
 
-local getEnps = function(notes)
+function enps.getEnps(notes)
 	local aStrain, strains = enps.noteStrain(notes)
 	local generalizedKeymode = enps.generalizedKeymode(notes)
 
 	return aStrain * generalizedKeymode, aStrain, generalizedKeymode, strains
 end
-enps.getEnps = getEnps
 
 if test then
-	assert(expDensity(0, 100) == 101)
-	assert(expDensity(math.huge, 100) == 0)
+	assert(enps.expDensity(0, 100) == 101)
+	assert(enps.expDensity(math.huge, 100) == 0)
 
 	local notes = {
 		{time = 0,		input = 1, density = 1},
@@ -113,11 +109,11 @@ if test then
 	local inputs = 2
 	local anps = 2
 
-	notes[3].density = expDensity(
+	notes[3].density = enps.expDensity(
 		(notes[3].time - notes[1].time) / inputs * anps,
 		notes[1].density
 	)
-	notes[4].density = expDensity(
+	notes[4].density = enps.expDensity(
 		(notes[4].time - notes[2].time) / inputs * anps,
 		notes[2].density
 	)
@@ -139,7 +135,7 @@ if test then
 	local inputs = 4
 	local anps = 2
 
-	notes[5].density = expDensity(
+	notes[5].density = enps.expDensity(
 		(notes[5].time - notes[1].time) / inputs * anps,
 		notes[1].density
 	)
@@ -160,7 +156,7 @@ if test then
 			input = 2
 		})
 	end
-	assert(math.abs(generalizedKeymode(notes) - 1.33) < 0.05)
+	assert(math.abs(enps.generalizedKeymode(notes) - 1.33) < 0.05)
 end
 
 if test then
@@ -177,7 +173,7 @@ if test then
 			input = 1
 		})
 	end
-	assert(math.abs(getEnps(notes) - 1) < 0.05)
+	assert(math.abs(enps.getEnps(notes) - 1) < 0.05)
 end
 
 if test then
@@ -195,7 +191,7 @@ if test then
 		})
 	end
 	table.sort(notes, function(a, b) return a.time < b.time end)
-	assert(math.abs(getEnps(notes) - 2) < 0.05)
+	assert(math.abs(enps.getEnps(notes) - 2) < 0.05)
 end
 
 if test then
@@ -213,7 +209,7 @@ if test then
 		})
 	end
 	table.sort(notes, function(a, b) return a.time < b.time end)
-	assert(math.abs(getEnps(notes) - 2) < 0.05)
+	assert(math.abs(enps.getEnps(notes) - 2) < 0.05)
 end
 
 return enps
