@@ -4,7 +4,7 @@
 
 \begin{document}
 
-\section*{Normalscore v2}
+\section*{Normalscore v2.1}
 
 \subsection*{Definition}
 
@@ -85,7 +85,7 @@ H / N = \int_{t_L}^{t_R} n_m(t) \,dt =
 
 Now apply the error function to the above:
 \[
-H / N = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau =
+\frac{H}{N} = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau =
 \frac{1}{2} \left[ \operatorname{erf}\left(\frac{t_R}{\sigma_m\sqrt{2}}\right) - \operatorname{erf}\left(\frac{t_L}{\sigma_m\sqrt{2}}\right) \right]
 \]
 
@@ -211,25 +211,30 @@ Return back to \(\Sigma_m\):
 = \sigma_m^2
 \left\{
     1 +
-    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
-    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}} -
-    \frac{H}{N}
+    T_R -
+    T_L -
+    H / N
 \right\}
+\]
+
+Where
+
+\[
+    T_s =
+    \frac{1}{\sqrt{\pi}} \frac{t_s}{\sigma_m\sqrt{2}} e^{-\frac{t_s^2}{2\sigma_m^2}} =
+    \frac{1}{\sqrt{\pi}} \tau_s e^{-\tau_s^2}
+    , \quad
+    \Delta T = T_R - T_L
 \]
 
 Finally, we have:
 \[
 s^2 =
 \frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
-\sigma_m^2
-\left\{
-    \frac{M}{N} +
-    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
-    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}}
-\right\}
+\sigma_m^2 (M / N + \Delta T)
 \]
 
-If \(t_R = -t_L = t_0\) then we can simplify the above to:
+If \(t_R = -t_L = t_0\) then we can exclude \(\sigma_m\) and simplify the above to:
 \[
 s^2 =
 \frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
@@ -246,13 +251,41 @@ s^2 =
 \left(\frac{t_0}{\tau_0}\right)^2
 \left\{
     \frac{M}{N} +
-    \frac{2}{\sqrt{\pi}} \tau_0 e^{-\tau_0^2}
+    2 T_0
 \right\}
 \]
 
 If \(\mu \neq 0\) we can adjust the accuracy using \eqref{eq:def_Variance}:
 \[
 s_a^2 = s^2 - \left[ \frac{1}{H} \sum_{i = 1}^{H} h_i \right]^2
+\]
+
+\subsection*{Sum of normalscores}
+
+\[
+    H = \sum H_i, \quad N = \sum N_i
+\]
+\[
+\frac{H_i}{N} = \frac{H_i(\sigma_m)}{N} = \frac{N_i}{N} \int_{t_{Li}}^{t_{Ri}} n_m(t) \,dt =
+\frac{N_i}{2N} \left[ \operatorname{erf}\left(\frac{t_{Ri}}{\sigma_m\sqrt{2}}\right) - \operatorname{erf}\left(\frac{t_{Li}}{\sigma_m\sqrt{2}}\right) \right]
+\]
+
+\[
+f(\sigma_m) = \sum f_i(\sigma_m), \quad
+f'(\sigma_m) = \sum {f_i}'(\sigma_m)
+\]
+
+\[
+\Sigma_m =
+\sigma_m^2
+\left\{
+    1 + \sum \frac{N_i \Delta T_i}{N} - \sum \frac{H_i}{N}
+\right\} =
+\frac{\sigma_m^2}{N}
+\left\{
+    M +
+    \sum N_i \Delta T_i
+\right\}
 \]
 
 \end{document}
