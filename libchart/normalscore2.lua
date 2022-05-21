@@ -126,7 +126,7 @@ function normalscore:update()
 		self.miss_addition = sigma_m ^ 2 * (self.miss_count + sum_NdT) / N
 	end
 
-	local score_squared = self.variance_sum / N + self.miss_addition
+	local score_squared = self.variance_sum / math.max(N, 1) + self.miss_addition
 
 	self.score_squared = score_squared
 	self.score = math.sqrt(score_squared)
