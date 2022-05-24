@@ -89,7 +89,7 @@ end
 function normalscore:update()
 	local N = self.hit_count + self.miss_count
 
-	if self.miss_count > 0 then
+	if self.miss_count > 0 and self.hit_count > 0 then
 		local ranges = self.ranges
 		local tau_0 = erfunc.erfinv(self.hit_count / N)
 
@@ -124,6 +124,9 @@ function normalscore:update()
 		end
 
 		self.miss_addition = sigma_m ^ 2 * (self.miss_count + sum_NdT) / N
+	elseif self.miss_count > 0 and self.hit_count == 0 then
+		self.ratio_score = math.huge
+		self.miss_addition = math.huge
 	end
 
 	local score_squared = self.variance_sum / math.max(N, 1) + self.miss_addition
