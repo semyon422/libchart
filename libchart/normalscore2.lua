@@ -15,17 +15,13 @@ normalscore.score_adjusted = 0
 normalscore.ratio_score = 0
 normalscore.miss_addition = 0
 
-function normalscore:new(ranges)
-	assert(type(ranges) == "table", "ranges must be a table")
+function normalscore:new()
 	local ns = {
-		ranges = ranges,
+		ranges = {},
+		ranges_map = {},
 		hit_counts = {},
 		samples_counts = {},
 	}
-	for i = 1, #ranges do
-		ns.hit_counts[i] = 0
-		ns.samples_counts[i] = 0
-	end
 	return setmetatable(ns, {__index = self})
 end
 
@@ -36,41 +32,48 @@ function normalscore:eq1i(sigma, i)
 	local H_i = self.hit_counts[i]
 	local N_i = self.samples_counts[i]
 
-	return N_i / (2 * N) * (
-		erfunc.erf(t_R / (sigma * math.sqrt(2))) - erfunc.erf(t_L / (sigma * math.sqrt(2)))
-	) - H_i / N
+	local s = 1 / (sigma * math.sqrt(2))
+	return
+		N_i / (2 * N) * (erfunc.erf(t_R * s) - erfunc.erf(t_L * s)) - H_i / N,
+		(-t_R * math.exp(-(t_R * s) ^ 2) + t_L * math.exp(-(t_L * s) ^ 2)) / (sigma ^ 2 * math.sqrt(2 * math.pi))
 end
 
 function normalscore:eq1(sigma)
-	local sum = 0
+	local sum1 = 0
+	local sum2 = 0
 	for i = 1, #self.ranges do
-		sum = sum + self:eq1i(sigma, i)
+		local s1, s2 = self:eq1i(sigma, i)
+		sum1 = sum1 + s1
+		sum2 = sum2 + s2
 	end
-	return sum
+	return sum1 / sum2
 end
 
-function normalscore:eq1di(sigma, i)
-	local range = self.ranges[i]
+function normalscore:get_range_index(range)
 	local t_L, t_R = range[1], range[2]
 
-	return 1 / (sigma ^ 2 * math.sqrt(2 * math.pi)) * (
-		-t_R * math.exp(-(t_R / (sigma * math.sqrt(2))) ^ 2) +
-		t_L * math.exp(-(t_L / (sigma * math.sqrt(2))) ^ 2)
-	)
-end
-
-function normalscore:eq1d(sigma)
-	local sum = 0
-	for i = 1, #self.ranges do
-		sum = sum + self:eq1di(sigma, i)
+	local map = self.ranges_map
+	if map[t_L] and map[t_L][t_R] then
+		return map[t_L][t_R]
 	end
-	return sum
+
+	table.insert(self.ranges, range)
+
+	local range_index = #self.ranges
+
+	map[t_L] = map[t_L] or {}
+	map[t_L][t_R] = range_index
+
+	self.hit_counts[range_index] = 0
+	self.samples_counts[range_index] = 0
+
+	return range_index
 end
 
-function normalscore:press(delta_time, range_index)
-	local range = self.ranges[range_index]
-	assert(range, "range_index out of range")
+function normalscore:press(delta_time, range)
 	local t_L, t_R = range[1], range[2]
+	assert(t_L and t_R, "invalid range")
+	local range_index = self:get_range_index(range)
 
 	self.samples_count = self.samples_count + 1
 	self.samples_counts[range_index] = self.samples_counts[range_index] + 1
@@ -107,7 +110,7 @@ function normalscore:update()
 		local k = 1
 		repeat
 			x = sigma_m
-			sigma_m = sigma_m - self:eq1(sigma_m) / self:eq1d(sigma_m)
+			sigma_m = sigma_m - self:eq1(sigma_m)
 			k = k + 1
 		until x == sigma_m or k > 20
 		self.ratio_score = sigma_m
