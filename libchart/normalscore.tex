@@ -4,19 +4,21 @@
 
 \begin{document}
 
-\section*{Normalscore v2.1}
+\section*{Normalscore v3}
 
 \subsection*{Definition}
 
-\[ h = (h_1, ..., h_H) \]
 \[ t_L \leq h_i \leq t_R \]
 \[
 s^2 =
-\frac{1}{N} \sum_{i = 1}^{H} h_i^2 + \Sigma_m
+\frac{H}{N} \operatorname{Var} (h) + \frac{M}{N} \operatorname{Var} (m) =
+\frac{H}{N} \left[
+    \langle h^2 \rangle - \langle h \rangle^2
+\right] + \Sigma_m
 \]
 
 \begin{equation}
-\Sigma_m = \int_{(-\infty, t_L) \cup (t_R, \infty)} t^2 n_m(t) \,dt
+\Sigma_m = \int_{(-\infty, t_L) \cup (t_R, \infty)} \left( t - \mu_h \right)^2 n_m(t) \,dt
 \label{eq:def_Sigma_m}
 \end{equation}
 
@@ -24,10 +26,14 @@ s^2 =
 M / N = \int_{(-\infty, t_L) \cup (t_R, \infty)} n_m(t) \,dt
 \]
 
+\[
+n_m(t) = \frac{1}{\sigma_m\sqrt{2 \pi }} e^{-(t - \mu_h)^2/2\sigma_m^2}, \quad \mu_h = \langle h \rangle
+\]
+
 \subsection*{\href{https://en.wikipedia.org/wiki/Normal_distribution}{Normal distribution}}
 
 \[
-n_m(t) = \frac{1}{\sigma_m\sqrt{2 \pi }} e^{-t^2/2\sigma_m^2} \quad (\mu = 0)
+n(t, \mu, \sigma) = \frac{1}{\sigma\sqrt{2 \pi }} e^{-(t - \mu)^2/2\sigma^2}
 \]
 
 \subsection*{\href{https://en.wikipedia.org/wiki/Error_function}{Error function}}
@@ -69,50 +75,48 @@ n_m(t) = \frac{1}{\sigma_m\sqrt{2 \pi }} e^{-t^2/2\sigma_m^2} \quad (\mu = 0)
 
 Redefine \( M / N \) as follows:
 \begin{equation}
-M / N = 1 - H / N =
-1 - \int_{t_L}^{t_R} n(t, 0, \sigma_m) \,dt
+M / N = 1 - H / N = 1 - \int_{t_L}^{t_R} n_m(t) \,dt
 \end{equation}
 
 Derive \( H / N \):
 \[
 H / N = \int_{t_L}^{t_R} n_m(t) \,dt =
-\int_{t_L}^{t_R} \frac{1}{\sigma_m\sqrt{2\pi}} \exp\left(-\frac{t^2}{2\sigma_m^2} \right) \,dt =
+\int_{t_L}^{t_R} \frac{1}{\sigma_m\sqrt{2\pi}} \exp\left(-\frac{(t - \mu_h)^2}{2\sigma_m^2} \right) \,dt =
 \]
 \[
-= \frac{1}{\sqrt{\pi}} \int_{t_L}^{t_R} \exp\left(-\frac{t^2}{2\sigma_m^2} \right) \,d\left(\frac{t}{\sigma_m\sqrt{2}}\right) =
-\frac{1}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau
+= \frac{1}{\sqrt{\pi}} \int_{t_L}^{t_R} \exp\left(-\frac{(t - \mu_h)^2}{2\sigma_m^2} \right) \,d\left(\frac{t - \mu_h}{\sigma_m\sqrt{2}}\right) =
+\frac{1}{\sqrt{\pi}} \int_{\tau_L}^{\tau_R} \exp\left(-\tau^2 \right) \,d\tau
 \]
 
 Now apply the error function to the above:
 \[
-\frac{H}{N} = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\frac{t_L}{\sigma_m\sqrt{2}}}^{\frac{t_R}{\sigma_m\sqrt{2}}} \exp\left(-\tau^2 \right) \,d\tau =
-\frac{1}{2} \left[ \operatorname{erf}\left(\frac{t_R}{\sigma_m\sqrt{2}}\right) - \operatorname{erf}\left(\frac{t_L}{\sigma_m\sqrt{2}}\right) \right]
+\frac{H}{N} = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\tau_L}^{\tau_R} \exp\left(-\tau^2 \right) \,d\tau =
+\frac{1}{2} \left( \operatorname{erf} \tau_R - \operatorname{erf} \tau_L \right) , \quad \tau_i = \frac{t_i - \mu_h}{\sigma_m\sqrt{2}}
 \]
 
-Using the above, we can derive \(\sigma_m\).
-If \(t_R = -t_L = t_0\) then
+Using the above, we can derive \(\sigma_m\). If \(t_R = -t_L = t_0\) and \( \mu_h = 0 \) then
 \[
 H / N = \operatorname{erf}\left(\frac{t_0}{\sigma_m\sqrt{2}}\right)
 \]
 \[
-\operatorname{erf^{-1}}\left(H / N\right) = \frac{t_0}{\sigma_m\sqrt{2}} = \tau_0
+\operatorname{erf^{-1}}\left(H / N\right) = \frac{t_0}{\sigma_m\sqrt{2}} = \widetilde{\tau}_0
 \]
 \[
-\sigma_m = \frac{t_0}{\operatorname{erf^{-1}}\left(H / N\right)\sqrt{2}} = \frac{t_0}{\tau_0\sqrt{2}}
+\sigma_m = \frac{t_0}{\operatorname{erf^{-1}}\left(H / N\right)\sqrt{2}} = \frac{t_0}{\widetilde{\tau}_0\sqrt{2}}
 \]
 
 Else we can derive \(\sigma_m\) using \href{https://en.wikipedia.org/wiki/Newton%27s_method}{Newton's method}:
 \[
 f(\sigma_m) = \frac{1}{2} \left[
-    \operatorname{erf}\left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
-    \operatorname{erf}\left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+    \operatorname{erf}\left(\frac{t_R - \mu_h}{\sigma_m\sqrt{2}}\right) -
+    \operatorname{erf}\left(\frac{t_L - \mu_h}{\sigma_m\sqrt{2}}\right)
 \right] - H / N
 \]
 \[
-f'(\sigma_m) = \frac{1}{\sigma_m^2\sqrt{2\pi}} \left(
-    t_L e^{-t_L^2/2\sigma_m^2} -
-    t_R e^{-t_R^2/2\sigma_m^2}
-\right)
+f'(\sigma_m) = \frac{1}{\sigma_m^2\sqrt{2\pi}} \left[
+    \left(t_L - \mu_h\right) e^{-(t_L - \mu_h)^2/2\sigma_m^2} -
+    \left(t_R - \mu_h\right) e^{-(t_R - \mu_h)^2/2\sigma_m^2}
+\right]
 \]
 \[
     x_{n+1}=x_{n}-{\frac {f(x_{n})}{f'(x_{n})}}
@@ -121,100 +125,123 @@ f'(\sigma_m) = \frac{1}{\sigma_m^2\sqrt{2\pi}} \left(
 
 Define \( \sigma_m \) using \(\Sigma_m\) \eqref{eq:def_Sigma_m} and \eqref{eq:def_Variance_sum} as follows:
 \[
-\sigma_m^2 = \int_{-\infty}^{\infty} t^2 n_m(t) \,dt =
-\Sigma_m + \int_{t_L}^{t_R} t^2 n_m(t) \,dt
+\sigma_m^2 = \int_{-\infty}^{\infty} \left( t - \mu_h \right)^2 n_m(t) \,dt =
+\Sigma_m + \int_{t_L}^{t_R} \left( t - \mu_h \right)^2 n_m(t) \,dt
 \]
 
 Rearrange:
 \[
-\Sigma_m = \sigma_m^2 - \int_{t_L}^{t_R} t^2 n_m(t) \,dt
+\Sigma_m = \sigma_m^2 - \int_{t_L}^{t_R} \left( t - \mu_h \right)^2 n_m(t) \,dt
 \]
 \[
-\int_{t_L}^{t_R} t^2 n_m(t) \,dt =
-\int_{t_L}^{t_R} t^2 \frac{1}{\sigma\sqrt{2 \pi }} \exp\left(-\frac{t^2}{2\sigma^2} \right) \,dt =
+\int_{t_L}^{t_R} \left( t - \mu_h \right)^2 n_m(t) \,dt =
+\int_{t_L}^{t_R} \left( t - \mu_h \right)^2 \frac{1}{\sigma_m\sqrt{2 \pi }} \exp\left(-\frac{(t - \mu_h)^2}{2\sigma_m^2} \right) \,dt =
 \]
 \[
     = \frac{\sigma_m^2}{\sqrt{2\pi}}
     \int_{t_L}^{t_R}
-    \left(\frac{t}{\sigma_m}\right)^2
-    \exp\left(-\frac{t^2}{2\sigma^2} \right)
-    \,d\left(\frac{t}{\sigma_m}\right) =
+    \left(\frac{t - \mu_h}{\sigma_m}\right)^2
+    \exp\left(-\frac{(t - \mu_h)^2}{2\sigma_m^2} \right)
+    \,d\left(\frac{t - \mu_h}{\sigma_m}\right) =
 \]
 \[
     = \frac{\sigma_m^2}{\sqrt{2\pi}}
-    \frac{\sqrt{2\pi}}{2}
-    \frac{2}{\sqrt{2\pi}}
-    \int_{t_L/\sigma_m}^{t_R/\sigma_m}
-    \tau^2
-    \exp\left(-\frac{\tau^2}{2} \right)
-    \,d\tau =
+    \int_{(t_L - \mu_h)/\sigma_m}^{(t_R - \mu_h)/\sigma_m}
+    \alpha^2
+    \exp\left(-\frac{\alpha^2}{2} \right)
+    \,d\alpha = \frac{\sigma_m^2}{\sqrt{2\pi}} I_1
+\]
+
+Solve \(I_1\):
+
+\[
+    I_1 = 
+    \frac{\sqrt{2\pi}}{1}
+    \frac{1}{\sqrt{2\pi}}
+    \int_{\alpha_L}^{\alpha_R}
+    \alpha^2
+    \exp\left(-\frac{\alpha^2}{2} \right)
+    \,d\alpha =
 \]
 \[
-    = \frac{\sigma_m^2}{\sqrt{2\pi}}
-    \frac{\sqrt{2\pi}}{2}
+    = \sqrt{2\pi}
     \left\{
         \left.
-        -\frac{2x}{\sqrt{2\pi}} e^{-x^2/2}
-        \right|_{t_L/\sigma_m}^{t_R/\sigma_m} +
-        2 \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+        -\frac{x}{\sqrt{2\pi}} e^{-x^2/2}
+        \right|_{\alpha_L}^{\alpha_R} +
+        \int_{\alpha_L}^{\alpha_R}
         \frac{1}{\sqrt{2\pi}} e^{-x^2/2} \,dx
     \right\} =
 \]
 \[
-    = \frac{\sigma_m^2}{2}
+    = \sqrt{2\pi}
     \left\{
-        -\frac{2t_R}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_R^2}{2\sigma_m^2}} +
-        \frac{2t_L}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_L^2}{2\sigma_m^2}} +
-        \frac{2}{\sqrt{2\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+        -\frac{\alpha_R}{\sqrt{2\pi}} e^{-\alpha_R^2/2} +
+        \frac{\alpha_L}{\sqrt{2\pi}} e^{-\alpha_L^2/2} +
+        \frac{1}{\sqrt{2\pi}} \int_{\alpha_L}^{\alpha_R}
         e^{-x^2/2} \,dx
     \right\}
 \]
 
 Solve the integral:
 \[
-    \frac{2}{\sqrt{2\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+    \frac{1}{\sqrt{2\pi}} \int_{\alpha_L}^{\alpha_R}
     e^{-x^2/2} \,dx =
-    \frac{2}{\sqrt{\pi}} \int_{t_L/\sigma_m}^{t_R/\sigma_m}
+    \frac{1}{\sqrt{\pi}} \int_{\alpha_L}^{\alpha_R}
     e^{-x^2/2} \,d\left(\frac{x}{\sqrt{2}}\right) =
 \]
 \[
-    = \frac{2}{\sqrt{\pi}} \int_{t_L/\sigma_m\sqrt{2}}^{t_R/\sigma_m\sqrt{2}}
+    = \frac{1}{\sqrt{\pi}} \int_{\alpha_L/\sqrt{2}}^{\alpha_R/\sqrt{2}}
     e^{-t^2} \,dt =
-    \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
-    \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
+    \frac{1}{2} \left(
+    \operatorname{erf} \tau_R -
+    \operatorname{erf} \tau_L
+    \right)
+\]
+
+\[
+    I_1 = \sqrt{2\pi}
+    \left[
+        -\frac{\tau_R}{\sqrt{\pi}} e^{-\tau_R^2} +
+        \frac{\tau_L}{\sqrt{\pi}} e^{-\tau_L^2} +
+        \frac{1}{2} \left(
+        \operatorname{erf} \tau_R -
+        \operatorname{erf} \tau_L
+        \right)
+    \right]
+\]
+\[
+    = \sqrt{2\pi}
+    \left[
+        -\frac{\tau_R}{\sqrt{\pi}} e^{-\tau_R^2} +
+        \frac{\tau_L}{\sqrt{\pi}} e^{-\tau_L^2} +
+        \frac{H}{N}
+    \right]
 \]
 
 Return back to \(\Sigma_m\):
 \[
-\Sigma_m = \sigma_m^2 -
-\frac{\sigma_m^2}{2}
-\left\{
-    -\frac{2t_R}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_R^2}{2\sigma_m^2}} +
-    \frac{2t_L}{\sigma_m\sqrt{2\pi}} e^{-\frac{t_L^2}{2\sigma_m^2}} +
-    \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
-    \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
-\right\} =
+\Sigma_m = \sigma_m^2 - \frac{\sigma_m^2}{\sqrt{2\pi}} I_1 =
 \]
 \[
 = \sigma_m^2
-\left\{
+\left(
     1 +
-    \frac{1}{\sqrt{\pi}} \frac{t_R}{\sigma_m\sqrt{2}} e^{-\frac{t_R^2}{2\sigma_m^2}} -
-    \frac{1}{\sqrt{\pi}} \frac{t_L}{\sigma_m\sqrt{2}} e^{-\frac{t_L^2}{2\sigma_m^2}} -
-    \frac{1}{2} \left(
-        \operatorname{erf} \left(\frac{t_R}{\sigma_m\sqrt{2}}\right) -
-        \operatorname{erf} \left(\frac{t_L}{\sigma_m\sqrt{2}}\right)
-    \right)
-\right\} =
+    \frac{\tau_R}{\sqrt{\pi}} e^{-\tau_R^2} -
+    \frac{\tau_L}{\sqrt{\pi}} e^{-\tau_L^2} -
+    \frac{H}{N}
+\right)
 \]
+
 \[
 = \sigma_m^2
-\left\{
-    1 +
-    T_R -
-    T_L -
-    H / N
-\right\}
+\left(
+    1 + T_R - T_L - H / N
+\right)
+= \sigma_m^2
+\left(
+    M / N + \Delta T
+\right)
 \]
 
 Where
@@ -230,34 +257,10 @@ Where
 Finally, we have:
 \[
 s^2 =
-\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
+H/N \left[
+    \langle h^2 \rangle - \langle h \rangle^2
+\right] +
 \sigma_m^2 (M / N + \Delta T)
-\]
-
-If \(t_R = -t_L = t_0\) then we can exclude \(\sigma_m\) and simplify the above to:
-\[
-s^2 =
-\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
-\left(\frac{t_0}{\tau_0\sqrt{2}}\right)^2
-\left\{
-    \frac{M}{N} +
-    \frac{2}{\sqrt{\pi}} \frac{t_0}{\sigma_m\sqrt{2}} e^{-\frac{t_0^2}{2\sigma_m^2}}
-\right\}
-\]
-\[
-s^2 =
-\frac{1}{N} \sum_{i = 1}^{H} h_i^2 +
-\frac{1}{2}
-\left(\frac{t_0}{\tau_0}\right)^2
-\left\{
-    \frac{M}{N} +
-    2 T_0
-\right\}
-\]
-
-If \(\mu \neq 0\) we can adjust the accuracy using \eqref{eq:def_Variance}:
-\[
-s_a^2 = s^2 - \left[ \frac{1}{H} \sum_{i = 1}^{H} h_i \right]^2
 \]
 
 \subsection*{Sum of normalscores}
