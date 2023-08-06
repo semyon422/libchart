@@ -147,16 +147,8 @@ function normalscore:update()
 		return
 	end
 
-	local eiHN = erfunc.erfinv(H / N)
-
-	local sum = 0
-	local sum_weights = 0
-	for name, range in pairs(self.ranges) do
-		local t_L, t_R = self:unpack_range(range)
-		sum = sum + (t_R - t_L) / (2 * eiHN * math.sqrt(2)) * self.hit_counts[name]
-		sum_weights = sum_weights + self.hit_counts[name]
-	end
-	local sigma_m = sum / sum_weights
+	-- initial estimate using t_0 = (maxR - minL) / 2
+	local sigma_m = (maxR - minL) / (2 * erfunc.erfinv(H / N) * math.sqrt(2))
 
 	local x
 	local k = 1

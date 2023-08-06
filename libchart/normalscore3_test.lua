@@ -55,3 +55,58 @@ ns:update()
 
 assert(math.abs(ns.score - sigma) / sigma < 0.01)
 assert(ns.ranges.range1[1] > 0 and ns.ranges.range1[2] > 0)
+
+----------------------------
+
+local function is_inf(score)
+	return math.abs(score) == math.huge
+end
+
+local function is_nan(score)
+	return score ~= score
+end
+
+local function is_valid(score)
+	return not is_inf(score) and not is_nan(score)
+end
+
+do
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:update()
+	assert(is_valid(ns.score))
+end
+
+do
+	local ns = normalscore:new()
+	ns:miss("A")
+	ns:update()
+	assert(is_inf(ns.score))
+end
+
+do
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:miss("A")
+	ns:update()
+	assert(is_inf(ns.score))
+end
+
+do
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:hit("A", 0.11)
+	ns:miss("B")
+	ns:update()
+	assert(is_valid(ns.score))
+end
+
+do
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:hit("B", 0.11)
+	ns:miss("B")
+	ns:update()
+	assert(is_valid(ns.score))
+end
+
