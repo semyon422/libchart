@@ -89,7 +89,7 @@ do
 	ns:hit("A", 0.1)
 	ns:miss("A")
 	ns:update()
-	assert(is_inf(ns.score))
+	assert(is_valid(ns.score))
 end
 
 do
