@@ -19,6 +19,7 @@ local mt = {__index = normalscore}
 function normalscore:new()
 	local ns = {
 		ranges = {},
+		mean_sums = {},
 		hit_counts = {},
 		samples_counts = {},
 	}
@@ -26,16 +27,18 @@ function normalscore:new()
 end
 
 function normalscore:eq1i(sigma, name)
+	local N = self.samples_count
+	local H_i = self.hit_counts[name]
+	local N_i = self.samples_counts[name]
+	local mean_i = self.mean_sums[name] / H_i
+
 	local range = self.ranges[name]
 	local t_L, t_R = range[1], range[2]
 	if t_L == t_R then  -- both nil or equal
 		t_L, t_R = self:get_max_range()
+		mean_i = self.mean
 	end
-	t_L, t_R = t_L - self.mean, t_R - self.mean
-
-	local N = self.samples_count
-	local H_i = self.hit_counts[name]
-	local N_i = self.samples_counts[name]
+	t_L, t_R = t_L - mean_i, t_R - mean_i
 
 	local s = 1 / (sigma * math.sqrt(2))
 	return
@@ -63,6 +66,7 @@ function normalscore:get_range(range_name)
 	end
 
 	ranges[range_name] = {}
+	self.mean_sums[range_name] = 0
 	self.hit_counts[range_name] = 0
 	self.samples_counts[range_name] = 0
 
@@ -103,6 +107,7 @@ function normalscore:hit(range_name, delta_time)
 	self.hit_counts[range_name] = self.hit_counts[range_name] + 1
 
 	self.mean_sum = self.mean_sum + delta_time
+	self.mean_sums[range_name] = self.mean_sums[range_name] + delta_time
 	self.mean = self.mean_sum / self.hit_count
 
 	self.variance_sum = self.variance_sum + delta_time ^ 2

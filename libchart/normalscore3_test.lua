@@ -110,3 +110,13 @@ do
 	assert(is_valid(ns.score))
 end
 
+do
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:hit("A", 0.11)
+	ns:hit("B", 0.12)
+	ns:hit("B", 0.13)
+	ns:miss("B")
+	ns:update()
+	assert(is_valid(ns.score))
+end
