@@ -91,7 +91,7 @@ H / N = \int_{t_L}^{t_R} n_m(t) \,dt =
 Now apply the error function to the above:
 \[
 \frac{H}{N} = \frac{1}{2}\frac{2}{\sqrt{\pi}} \int_{\tau_L}^{\tau_R} \exp\left(-\tau^2 \right) \,d\tau =
-\frac{1}{2} \left( \operatorname{erf} \tau_R - \operatorname{erf} \tau_L \right) , \quad \tau_i = \frac{t_i - \mu_h}{\sigma_m\sqrt{2}}
+\frac{1}{2} \left( \operatorname{erf} \tau_R - \operatorname{erf} \tau_L \right) , \quad \tau_s = \frac{t_s - \mu_h}{\sigma_m\sqrt{2}}
 \]
 
 Using the above, we can derive \(\sigma_m\). If \(t_R = -t_L = t_0\) and \( \mu_h = 0 \) then
@@ -244,16 +244,6 @@ Return back to \(\Sigma_m\):
 \right)
 \]
 
-Where
-
-\[
-    T_s =
-    \frac{1}{\sqrt{\pi}} \frac{t_s}{\sigma_m\sqrt{2}} e^{-\frac{t_s^2}{2\sigma_m^2}} =
-    \frac{1}{\sqrt{\pi}} \tau_s e^{-\tau_s^2}
-    , \quad
-    \Delta T = T_R - T_L
-\]
-
 Finally, we have:
 \[
 s^2 =
@@ -269,8 +259,8 @@ H/N \left[
     H = \sum H_i, \quad N = \sum N_i
 \]
 \[
-\frac{H_i}{N} = \frac{H_i(\sigma_m)}{N} = \frac{N_i}{N} \int_{t_{Li}}^{t_{Ri}} n_m(t) \,dt =
-\frac{N_i}{2N} \left[ \operatorname{erf}\left(\frac{t_{Ri}}{\sigma_m\sqrt{2}}\right) - \operatorname{erf}\left(\frac{t_{Li}}{\sigma_m\sqrt{2}}\right) \right]
+\frac{H_i}{N} = \frac{N_i}{N} \int_{t_{Li}}^{t_{Ri}} n_m(t) \,dt =
+\frac{N_i}{2N} \left( \operatorname{erf} \tau_{Ri} - \operatorname{erf} \tau_{Li} \right) , \quad \tau_s = \frac{t_s - \mu_{hs}}{\sigma_m\sqrt{2}}
 \]
 
 \[
