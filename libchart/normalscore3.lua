@@ -21,7 +21,7 @@ function normalscore:new()
 		ranges = {},
 		mean_sums = {},
 		hit_counts = {},
-		samples_counts = {},
+		sample_counts = {},
 	}
 	return setmetatable(ns, mt)
 end
@@ -29,7 +29,7 @@ end
 function normalscore:eq1i(sigma, name)
 	local N = self.samples_count
 	local H_i = self.hit_counts[name]
-	local N_i = self.samples_counts[name]
+	local N_i = self.sample_counts[name]
 	local mean_i = self.mean_sums[name] / H_i
 
 	local range = self.ranges[name]
@@ -68,7 +68,7 @@ function normalscore:get_range(range_name)
 	ranges[range_name] = {}
 	self.mean_sums[range_name] = 0
 	self.hit_counts[range_name] = 0
-	self.samples_counts[range_name] = 0
+	self.sample_counts[range_name] = 0
 
 	return ranges[range_name]
 end
@@ -101,7 +101,7 @@ function normalscore:hit(range_name, delta_time)
 	range[2] = math.max(range[2] or delta_time, delta_time)
 
 	self.samples_count = self.samples_count + 1
-	self.samples_counts[range_name] = self.samples_counts[range_name] + 1
+	self.sample_counts[range_name] = self.sample_counts[range_name] + 1
 
 	self.hit_count = self.hit_count + 1
 	self.hit_counts[range_name] = self.hit_counts[range_name] + 1
@@ -118,7 +118,7 @@ function normalscore:miss(range_name)
 	self:get_range(range_name)
 
 	self.samples_count = self.samples_count + 1
-	self.samples_counts[range_name] = self.samples_counts[range_name] + 1
+	self.sample_counts[range_name] = self.sample_counts[range_name] + 1
 
 	self.miss_count = self.miss_count + 1
 end
@@ -171,7 +171,7 @@ function normalscore:update()
 		local tau_R = (t_R - mean) / (sigma_m * math.sqrt(2))
 		sum_NdT = sum_NdT +
 			(tau_R * math.exp(-tau_R ^ 2) - tau_L * math.exp(-tau_L ^ 2)) /
-			math.sqrt(math.pi) * self.samples_counts[name]
+			math.sqrt(math.pi) * self.sample_counts[name]
 	end
 
 	self.miss_addition = sigma_m ^ 2 * (self.miss_count + sum_NdT) / N
