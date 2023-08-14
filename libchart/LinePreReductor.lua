@@ -1,13 +1,6 @@
-local LinePreReductor = {}
+local class = require("class")
 
-LinePreReductor.new = function(self)
-	local linePreReductor = {}
-
-	setmetatable(linePreReductor, self)
-	self.__index = self
-
-	return linePreReductor
-end
+local LinePreReductor = class()
 
 local intersectSegment = function(tc, tm, bc, bm)
 	return (
@@ -16,7 +9,7 @@ local intersectSegment = function(tc, tm, bc, bm)
 	) * tm
 end
 
-LinePreReductor.createIntersectTable = function(self)
+function LinePreReductor:createIntersectTable()
 	local intersectTable = {}
 	for i = 1, self.targetMode do
 		intersectTable[i] = {}
@@ -27,7 +20,7 @@ LinePreReductor.createIntersectTable = function(self)
 	self.intersectTable = intersectTable
 end
 
-LinePreReductor.processLine = function(self, line)
+function LinePreReductor:processLine(line)
 	local intersectTable = self.intersectTable
 	local targetMode = self.targetMode
 
@@ -88,7 +81,7 @@ LinePreReductor.processLine = function(self, line)
 	line.maxReducedNoteCount = maxReducedNoteCount
 end
 
-LinePreReductor.getLines = function(self, notes, columnCount, targetMode)
+function LinePreReductor:getLines(notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount
 	self.targetMode = targetMode

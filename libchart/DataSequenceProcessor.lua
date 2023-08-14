@@ -1,29 +1,20 @@
-local DataSequenceProcessor = {}
+local class = require("class")
 
-local DataSequenceProcessor_metatable = {}
-DataSequenceProcessor_metatable.__index = DataSequenceProcessor
+local DataSequenceProcessor = class()
 
-DataSequenceProcessor.new = function(self)
-	local dataSequenceProcessor = {}
-	
-	setmetatable(dataSequenceProcessor, DataSequenceProcessor_metatable)
-	
-	return dataSequenceProcessor
-end
-
-DataSequenceProcessor.process = function(self, dataSequences)
+function DataSequenceProcessor:process(dataSequences)
 	local timeData = {}
-	
+
 	for _, dataSequence in pairs(dataSequences) do
 		for _, data in ipairs(dataSequence) do
 			timeData[data.time] = true
 		end
 	end
-	
+
 	local outDataSequence = {}
 	for time in pairs(timeData) do
 		local datas = {}
-		
+
 		for _, dataSequence in pairs(dataSequences) do
 			for _, data in ipairs(dataSequence) do
 				if data.time <= time then
@@ -34,25 +25,25 @@ DataSequenceProcessor.process = function(self, dataSequences)
 				end
 			end
 		end
-		
+
 		local outData = {
 			time = time,
 			values = {}
 		}
-		
+
 		for _, data in pairs(datas) do
 			for valueIndex, value in pairs(data.values) do
 				outData.values[valueIndex] = (outData.values[valueIndex] or 1) * value
 			end
 		end
-		
+
 		table.insert(outDataSequence, outData)
 	end
-	
+
 	table.sort(outDataSequence, function(a, b)
 		return a.time < b.time
 	end)
-	
+
 	return outDataSequence
 end
 

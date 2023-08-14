@@ -1,23 +1,16 @@
-local SequenceAccumulator = {}
+local class = require("class")
 
-local SequenceAccumulator_metatable = {}
-SequenceAccumulator_metatable.__index = SequenceAccumulator
+local SequenceAccumulator = class()
 
-SequenceAccumulator.new = function(self)
-	local sa = {}
-	
-	sa.sequences = {}
-	
-	setmetatable(sa, SequenceAccumulator_metatable)
-	
-	return sa
+function SequenceAccumulator:new()
+	self.sequences = {}
 end
 
-SequenceAccumulator.add = function(self, sequence)
+function SequenceAccumulator:add(sequence)
 	table.insert(self.sequences, sequence)
 end
 
-SequenceAccumulator.get = function(self)
+function SequenceAccumulator:get()
 	return self.sequences
 end
 

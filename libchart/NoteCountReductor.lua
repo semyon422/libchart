@@ -1,17 +1,10 @@
-local NoteCountReductor = {}
+local class = require("class")
 
-NoteCountReductor.new = function(self)
-	local noteCountReductor = {}
-
-	setmetatable(noteCountReductor, self)
-	self.__index = self
-
-	return noteCountReductor
-end
+local NoteCountReductor = class()
 
 local recursionLimit = 1000
 local recursionDepth = 0
-NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
+function NoteCountReductor:check(linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
 	local rate = 0
 
@@ -65,7 +58,7 @@ NoteCountReductor.check = function(self, linePairIndex, line2NoteCount)
 	return rate
 end
 
-NoteCountReductor.processJackCount = function(self, linePairIndex)
+function NoteCountReductor:processJackCount(linePairIndex)
 	local linePair = self.linePairs[linePairIndex]
 
 	local notes = {}
@@ -98,7 +91,7 @@ NoteCountReductor.processJackCount = function(self, linePairIndex)
 	end
 end
 
-NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
+function NoteCountReductor:preprocessLinePair(linePairIndex)
 	local linePairs = self.linePairs
 	local linePair = linePairs[linePairIndex]
 
@@ -140,7 +133,7 @@ NoteCountReductor.preprocessLinePair = function(self, linePairIndex)
 	end
 end
 
-NoteCountReductor.preprocessLinePairs = function(self)
+function NoteCountReductor:preprocessLinePairs()
 	self.linePairs = {}
 	local linePairs = self.linePairs
 	local lines = self.lines
@@ -162,7 +155,7 @@ NoteCountReductor.preprocessLinePairs = function(self)
 	end
 end
 
-NoteCountReductor.processLinePairs = function(self)
+function NoteCountReductor:processLinePairs()
 	local linePairs = self.linePairs
 	for linePairIndex = 0, #self.linePairs do
 		local linePair = linePairs[linePairIndex]
@@ -222,7 +215,7 @@ NoteCountReductor.processLinePairs = function(self)
 	end
 end
 
-NoteCountReductor.process = function(self, lines, columnCount, targetMode)
+function NoteCountReductor:process(lines, columnCount, targetMode)
 	self.lines = lines
 	self.columnCount = columnCount
 	self.targetMode = targetMode

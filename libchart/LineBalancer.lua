@@ -1,16 +1,7 @@
-local SolutionSeeker = require("libchart.SolutionSeeker")
+local class = require("class")
 local enps = require("libchart.enps")
 
-local LineBalancer = {}
-
-LineBalancer.new = function(self)
-	local lineBalancer = {}
-
-	setmetatable(lineBalancer, self)
-	self.__index = self
-
-	return lineBalancer
-end
+local LineBalancer = class()
 
 local factorial
 factorial = function(n)
@@ -46,7 +37,7 @@ local nextCombination = function(a, n, k)
 	end
 end
 
-LineBalancer.createLineCombinationsTable = function(self)
+function LineBalancer:createLineCombinationsTable()
 	local lineCombinationsTable = {}
 
 	for noteCount = 1, self.targetMode do
@@ -66,7 +57,7 @@ LineBalancer.createLineCombinationsTable = function(self)
 	self.lineCombinationsTable = lineCombinationsTable
 end
 
-LineBalancer.createLineCombinationsMap = function(self)
+function LineBalancer:createLineCombinationsMap()
 	local lineCombinationsTable = self.lineCombinationsTable
 
 	local lineCombinationsMap = {}
@@ -89,7 +80,7 @@ LineBalancer.createLineCombinationsMap = function(self)
 	self.lineCombinationsMap = lineCombinationsMap
 end
 
-LineBalancer.createLineCombinationsCountTable = function(self)
+function LineBalancer:createLineCombinationsCountTable()
 	local lineCombinationsCountTable = {}
 	for noteCount = 1, self.targetMode do
 		lineCombinationsCountTable[noteCount] = getCombinationsCount(self.targetMode, noteCount)
@@ -97,7 +88,7 @@ LineBalancer.createLineCombinationsCountTable = function(self)
 	self.lineCombinationsCountTable = lineCombinationsCountTable
 end
 
-LineBalancer.overDiff = function(self, combinationMap, overlap)
+function LineBalancer:overDiff(combinationMap, overlap)
 	local sum = 0
 
 	for i = 1, #overlap do
@@ -109,7 +100,7 @@ LineBalancer.overDiff = function(self, combinationMap, overlap)
 	return sum
 end
 
-LineBalancer.lineExpDensities = function(self, time)
+function LineBalancer:lineExpDensities(time)
 	local densityStacks = self.densityStacks
 
 	local densities = {}
@@ -124,7 +115,7 @@ end
 
 local recursionLimit = 100
 local recursionDepth = 0
-LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
+function LineBalancer:checkLine(lineIndex, lineCombinationIndex)
 	local lines = self.lines
 	local lineCombinationsMap = self.lineCombinationsMap
 	local lineCombinationsTable = self.lineCombinationsTable
@@ -234,7 +225,7 @@ LineBalancer.checkLine = function(self, lineIndex, lineCombinationIndex)
 	return rate
 end
 
-LineBalancer.balanceLines = function(self)
+function LineBalancer:balanceLines()
 	local densityStacks = {}
 	self.densityStacks = densityStacks
 
@@ -283,7 +274,7 @@ LineBalancer.balanceLines = function(self)
 	end
 end
 
-LineBalancer.process = function(self, lines, columnCount, targetMode)
+function LineBalancer:process(lines, columnCount, targetMode)
 	self.lines = lines
 	self.columnCount = columnCount
 	self.targetMode = targetMode

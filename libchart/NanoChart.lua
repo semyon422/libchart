@@ -1,16 +1,8 @@
+local class = require("class")
 local byte = require("byte")
 local bit = require("bit")
 
-local NanoChart = {}
-
-NanoChart.new = function(self)
-	local nanoChart = {}
-
-	setmetatable(nanoChart, self)
-	self.__index = self
-
-	return nanoChart
-end
+local NanoChart = class()
 
 --[[
 	header {
@@ -96,7 +88,7 @@ assert(table.concat(tobits(2)) == "01")
 assert(table.concat(tobits(1023)) == "1111111111")
 assert(table.concat(tobits(1024)) == "00000000001")
 
-NanoChart.encodeNote = function(self, input, type, sameTime, noteTime)
+function NanoChart:encodeNote(input, type, sameTime, noteTime)
 	local prefix = ""
 	local postfix = ""
 	local noteType
@@ -153,7 +145,7 @@ assert(tohex(NanoChart:encodeNote(128, 0, false, 1/128)) == "0008f080")	-- 00000
 assert(tohex(NanoChart:encodeNote(128, 0, true, 1/128)) == "f480")		-- 1111010010000000
 
 local sortNotes = function(a, b) return a.time < b.time or a.time == b.time and a.input < b.input end
-NanoChart.encode = function(self, hash, inputs, notes)
+function NanoChart:encode(hash, inputs, notes)
 	-- table.sort(notes, sortNotes)
 
 	local objects = {
@@ -194,7 +186,7 @@ NanoChart.encode = function(self, hash, inputs, notes)
 	return table.concat(objects)
 end
 
-NanoChart.decode = function(self, content)
+function NanoChart:decode(content)
 	local buffer = byte.buffer(#content)
 	buffer:fill(content):seek(0)
 

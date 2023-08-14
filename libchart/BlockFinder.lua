@@ -1,20 +1,13 @@
+local class = require("class")
 local NoteBlock = require("libchart.NoteBlock")
 
-local BlockFinder = {}
+local BlockFinder = class()
 
-local BlockFinder_metatable = {}
-BlockFinder_metatable.__index = BlockFinder
-
-BlockFinder.new = function(self)
-	local blockFinder = {}
+function BlockFinder:new()
 	self.noteBlocks = {}
-	
-	setmetatable(blockFinder, BlockFinder_metatable)
-	
-	return blockFinder
 end
 
-BlockFinder.process = function(self)
+function BlockFinder:process()
 	local line = self.noteData[1].line.first
 	while line do
 		for _, note in ipairs(line) do
@@ -26,7 +19,7 @@ BlockFinder.process = function(self)
 	end
 end
 
-BlockFinder.getBlock = function(self, note)
+function BlockFinder:getBlock(note)
 	local block = self:findBlock(note)
 	block:extend()
 	return block
@@ -70,21 +63,21 @@ local checkNextNote = function(note, nextNote, step, deltaTime, forceSameType)
 	end
 end
 
-BlockFinder.findBlock = function(self, note)
-	local block = NoteBlock:new()
+function BlockFinder:findBlock(note)
+	local block = NoteBlock()
 	block:addNote(note)
-	
+
 	local nextNote = note.top
 	if not nextNote then
 		return block
 	end
-	
+
 	local baseNote = note
 	local deltaTime = nextNote.startTime - note.startTime
 	local nextNote2 = nextNote.top
 	local step = 0
 	local forceSameType = false
-	
+
 	if matchDelta(nextNote.lanePos, note.lanePos, 0, 1, true) then
 		step = 1
 	elseif matchDelta(nextNote.lanePos, note.lanePos, 0, 2, true) then
@@ -97,13 +90,13 @@ BlockFinder.findBlock = function(self, note)
 	else
 		return block
 	end
-	
+
 	while checkNextNote(note, nextNote, step, deltaTime, forceSameType) do
 		block:addNote(nextNote)
 		note = nextNote
 		nextNote = nextNote.top
 	end
-	
+
 	return block
 end
 
@@ -111,31 +104,31 @@ local sortBlocks = function(a, b)
 	return a.startTime < b.startTime or a.startTime == b.startTime and a.columnIndex < b.columnIndex
 end
 
-BlockFinder.getNoteBlocks = function(self)
+function BlockFinder:getNoteBlocks()
 	local blocks = {}
-	
+
 	for _, note in ipairs(self.noteData) do
 		if note.blockStart then
 			blocks[#blocks + 1] = note.block
 		end
 	end
 	table.sort(blocks, sortBlocks)
-	
+
 	return blocks
 end
 
-BlockFinder.getClearNoteBlocks = function(self)
+function BlockFinder:getClearNoteBlocks()
 	local blocks = {}
-	
+
 	for _, note in ipairs(self.noteData) do
-		local block = NoteBlock:new()
+		local block = NoteBlock()
 		block:addNote(note)
 		block:extend()
 		block:lock()
 		note.block = block
 		blocks[#blocks + 1] = block
 	end
-	
+
 	return blocks
 end
 

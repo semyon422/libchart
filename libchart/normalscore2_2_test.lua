@@ -1,7 +1,7 @@
 package.loaded["libchart.erfunc"] = require("erfunc")
 local normalscore = require("normalscore2_2")
 
-local ns = normalscore:new()
+local ns = normalscore()
 
 local function norm_values(n, mu, sigma)
 	math.randomseed(0)

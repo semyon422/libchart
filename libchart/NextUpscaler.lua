@@ -1,17 +1,7 @@
+local class = require("class")
 local SolutionSeeker = require("libchart.SolutionSeeker")
 
-local NextUpscaler = {}
-
-local NextUpscaler_metatable = {}
-NextUpscaler_metatable.__index = NextUpscaler
-
-NextUpscaler.new = function(self)
-	local automap = {}
-
-	setmetatable(automap, NextUpscaler_metatable)
-
-	return automap
-end
+local NextUpscaler = class()
 
 local intersectSegment = function(tc, tm, bc, bm)
 	return (
@@ -20,7 +10,7 @@ local intersectSegment = function(tc, tm, bc, bm)
 	) * tm
 end
 
-NextUpscaler.getPrevNoteIndex = function(self, i, lane)
+function NextUpscaler:getPrevNoteIndex(i, lane)
 	for k = i - 1, 1, -1 do
 		local cnote = self.notes[k]
 		if cnote.seeker.lane == lane then
@@ -29,11 +19,11 @@ NextUpscaler.getPrevNoteIndex = function(self, i, lane)
 	end
 end
 
-NextUpscaler.getPrevNote = function(self, i, lane)
+function NextUpscaler:getPrevNote(i, lane)
 	return self.notes[self:getPrevNoteIndex(i, lane)]
 end
 
-NextUpscaler.getDelta = function(self, i, lane)
+function NextUpscaler:getDelta(i, lane)
 	local startTime = self.notes[i].startTime
 	local prevNoteIndex = self:getPrevNoteIndex(i, lane)
 	if prevNoteIndex then
@@ -42,7 +32,7 @@ NextUpscaler.getDelta = function(self, i, lane)
 	return startTime + 1000
 end
 
-NextUpscaler.checkHorizontalSpacing = function(self, i, lane)
+function NextUpscaler:checkHorizontalSpacing(i, lane)
 	local note = self.notes[i]
 
 	local rates = {}
@@ -80,7 +70,7 @@ NextUpscaler.checkHorizontalSpacing = function(self, i, lane)
 	return rates[lane]
 end
 
-NextUpscaler.checkVerticalSpacing = function(self, i, lane)
+function NextUpscaler:checkVerticalSpacing(i, lane)
 	local note = self.notes[i]
 	local prevNote = self:getPrevNote(i, lane)
 
@@ -115,7 +105,7 @@ NextUpscaler.checkVerticalSpacing = function(self, i, lane)
 end
 
 local recursionLimit = 0
-NextUpscaler.check = function(self, noteIndex, lane)
+function NextUpscaler:check(noteIndex, lane)
 	local rate = 1
 
 	local note = self.notes[noteIndex]
@@ -150,7 +140,7 @@ NextUpscaler.check = function(self, noteIndex, lane)
 	return rate
 end
 
-NextUpscaler.process = function(self)
+function NextUpscaler:process()
 	local check = function(noteIndex, lane)
 		return self:check(noteIndex, lane)
 	end

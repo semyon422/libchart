@@ -1,15 +1,8 @@
-local LongNoteReductor = {}
+local class = require("class")
 
-LongNoteReductor.new = function(self)
-	local longNoteReductor = {}
+local LongNoteReductor = class()
 
-	setmetatable(longNoteReductor, self)
-	self.__index = self
-
-	return longNoteReductor
-end
-
-LongNoteReductor.getNextLines = function(self, i, note)
+function LongNoteReductor:getNextLines(i, note)
 	local lines = self.lines
 	for j = i + 1, #lines - 2 do
 		local nextLine = lines[j]
@@ -22,7 +15,7 @@ LongNoteReductor.getNextLines = function(self, i, note)
 	return lines[i + 1], lines[i]
 end
 
-LongNoteReductor.reduceLongNotes = function(self)
+function LongNoteReductor:reduceLongNotes()
 	local lines = self.lines
 	local allLines = self.allLines
 	local allLinesMap = self.allLinesMap
@@ -72,7 +65,7 @@ LongNoteReductor.reduceLongNotes = function(self)
 	end
 end
 
-LongNoteReductor.process = function(self, notes, lines, columnCount, targetMode)
+function LongNoteReductor:process(notes, lines, columnCount, targetMode)
 	self.notes = notes
 	self.lines = lines
 	self.columnCount = columnCount

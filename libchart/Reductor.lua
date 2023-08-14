@@ -1,29 +1,21 @@
+local class = require("class")
 local LinePreReductor = require("libchart.LinePreReductor")
 local NoteCountReductor = require("libchart.NoteCountReductor")
 local LineBalancer = require("libchart.LineBalancer")
 local NoteApplyer = require("libchart.NoteApplyer")
 local LongNoteReductor = require("libchart.LongNoteReductor")
 
-local Reductor = {}
+local Reductor = class()
 
-local Reductor_metatable = {}
-Reductor_metatable.__index = Reductor
-
-Reductor.new = function(self)
-	local reductor = {}
-
-	reductor.noteCountReductor = NoteCountReductor:new()
-	reductor.linePreReductor = LinePreReductor:new()
-	reductor.lineBalancer = LineBalancer:new()
-	reductor.noteApplyer = NoteApplyer:new()
-	reductor.longNoteReductor = LongNoteReductor:new()
-
-	setmetatable(reductor, Reductor_metatable)
-
-	return reductor
+function Reductor:new()
+	self.noteCountReductor = NoteCountReductor()
+	self.linePreReductor = LinePreReductor()
+	self.lineBalancer = LineBalancer()
+	self.noteApplyer = NoteApplyer()
+	self.longNoteReductor = LongNoteReductor()
 end
 
-Reductor.exportLines = function(self, lines)
+function Reductor:exportLines(lines)
 	local notes = {}
 	for _, line in ipairs(lines) do
 		for j = 1, line.reducedNoteCount or line.maxReducedNoteCount do
@@ -37,7 +29,7 @@ Reductor.exportLines = function(self, lines)
 	return notes
 end
 
-Reductor.exportLineCombination = function(self, lines)
+function Reductor:exportLineCombination(lines)
 	local notes = {}
 	for _, line in ipairs(lines) do
 		for i = 1, line.reducedNoteCount do
@@ -51,7 +43,7 @@ Reductor.exportLineCombination = function(self, lines)
 	return notes
 end
 
-Reductor.exportNotes = function(self, lines)
+function Reductor:exportNotes(lines)
 	local notes = {}
 	for _, note in ipairs(self.notes) do
 		if note.reducedColumnIndex then
@@ -61,7 +53,7 @@ Reductor.exportNotes = function(self, lines)
 	return notes
 end
 
-Reductor.process = function(self, notes, columnCount, targetMode)
+function Reductor:process(notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount
 	self.targetMode = targetMode

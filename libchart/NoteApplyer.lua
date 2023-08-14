@@ -1,15 +1,8 @@
-local NoteApplyer = {}
+local class = require("class")
 
-NoteApplyer.new = function(self)
-	local noteApplyer = {}
+local NoteApplyer = class()
 
-	setmetatable(noteApplyer, self)
-	self.__index = self
-
-	return noteApplyer
-end
-
-NoteApplyer.applyNotesEqual = function(self, line)
+function NoteApplyer:applyNotesEqual(line)
 	-- add swap here if need
 	local notes = {}
 	for i = 1, line.reducedNoteCount do
@@ -20,7 +13,7 @@ NoteApplyer.applyNotesEqual = function(self, line)
 	line.reducedNotes = notes
 end
 
-NoteApplyer.applyNotesLessShort = function(self, line)
+function NoteApplyer:applyNotesLessShort(line)
 	-- TODO: choose notes with lower density
 	local notes = {}
 	for i = 1, line.reducedNoteCount do
@@ -31,7 +24,7 @@ NoteApplyer.applyNotesLessShort = function(self, line)
 	line.reducedNotes = notes
 end
 
-NoteApplyer.applyNotesLessLong = function(self, line)
+function NoteApplyer:applyNotesLessLong(line)
 	-- add swap here if need
 	local notes = {}
 	for _, note in ipairs(line.baseNotes) do
@@ -54,7 +47,7 @@ NoteApplyer.applyNotesLessLong = function(self, line)
 	line.reducedNotes = notes
 end
 
-NoteApplyer.applyNotesLessCombined = function(self, line)
+function NoteApplyer:applyNotesLessCombined(line)
 	-- add swap here if need
 	local notes = {}
 	for _, note in ipairs(line.baseNotes) do
@@ -88,7 +81,7 @@ NoteApplyer.applyNotesLessCombined = function(self, line)
 	line.reducedNotes = notes
 end
 
-NoteApplyer.applyNotesLess = function(self, line)
+function NoteApplyer:applyNotesLess(line)
 	if line.shortNoteCount > 0 and line.longNoteCount == 0 then
 		self:applyNotesLessShort(line)
 	elseif line.shortNoteCount == 0 and line.longNoteCount > 0 then
@@ -98,7 +91,7 @@ NoteApplyer.applyNotesLess = function(self, line)
 	end
 end
 
-NoteApplyer.applyNotes = function(self)
+function NoteApplyer:applyNotes()
 	for _, line in ipairs(self.lines) do
 		if line.reducedNoteCount == line.noteCount then
 			self:applyNotesEqual(line)
@@ -109,7 +102,7 @@ NoteApplyer.applyNotes = function(self)
 	-- ! save probortions (ln:sn)
 end
 
-NoteApplyer.process = function(self, notes, lines, columnCount, targetMode)
+function NoteApplyer:process(notes, lines, columnCount, targetMode)
 	self.notes = notes
 	self.lines = lines
 	self.columnCount = columnCount

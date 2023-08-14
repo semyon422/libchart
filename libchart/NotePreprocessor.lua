@@ -8,7 +8,7 @@ local sortLane = function(a, b)
 	return a.startTime < b.startTime
 end
 
-NotePreprocessor.process = function(self, notes)
+function NotePreprocessor:process(notes)
 	local lines = {}
 	local lanes = {}
 
@@ -181,7 +181,7 @@ NotePreprocessor.process = function(self, notes)
 	self.lanes = lanes
 end
 
-NotePreprocessor.print = function(self, path)
+function NotePreprocessor:print(path)
 	local file = io.open(path, "w")
 	for i = 1, #self.lines do
 		local line = self.lines[i]

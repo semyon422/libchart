@@ -4,15 +4,15 @@ local SolutionSeeker = {}
 -- 	return a[2] > b[2]
 -- end
 
-SolutionSeeker.onForward = function(self, seeker)
+function SolutionSeeker:onForward(seeker)
 
 end
 
-SolutionSeeker.onBackward = function(self, seeker)
+function SolutionSeeker:onBackward(seeker)
 
 end
 
-SolutionSeeker.solve = function(self, notes, laneCount, check, startNoteIndex)
+function SolutionSeeker:solve(notes, laneCount, check, startNoteIndex)
 	local noteIndex = startNoteIndex or 1
 	while true do
 		local note = notes[noteIndex]

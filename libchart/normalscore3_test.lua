@@ -1,7 +1,7 @@
 package.loaded["libchart.erfunc"] = require("erfunc")
 local normalscore = require("normalscore3")
 
-local ns = normalscore:new()
+local ns = normalscore()
 
 local function norm_values(n, mu, sigma)
 	math.randomseed(0)
@@ -71,21 +71,21 @@ local function is_valid(score)
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:hit("A", 0.1)
 	ns:update()
 	assert(is_valid(ns.score))
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:miss("A")
 	ns:update()
 	assert(is_inf(ns.score))
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:hit("A", 0.1)
 	ns:miss("A")
 	ns:update()
@@ -93,7 +93,7 @@ do
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:hit("A", 0.1)
 	ns:hit("A", 0.11)
 	ns:miss("B")
@@ -102,7 +102,7 @@ do
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:hit("A", 0.1)
 	ns:hit("B", 0.11)
 	ns:miss("B")
@@ -111,7 +111,7 @@ do
 end
 
 do
-	local ns = normalscore:new()
+	local ns = normalscore()
 	ns:hit("A", 0.1)
 	ns:hit("A", 0.11)
 	ns:hit("B", 0.12)
