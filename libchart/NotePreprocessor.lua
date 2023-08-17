@@ -1,13 +1,20 @@
 local NotePreprocessor = {}
 
-local sortLine = function(a, b)
+---@param a table
+---@param b table
+---@return boolean
+local function sortLine(a, b)
 	return a.columnIndex < b.columnIndex
 end
 
-local sortLane = function(a, b)
+---@param a table
+---@param b table
+---@return boolean
+local function sortLane(a, b)
 	return a.startTime < b.startTime
 end
 
+---@param notes table
 function NotePreprocessor:process(notes)
 	local lines = {}
 	local lanes = {}
@@ -181,8 +188,9 @@ function NotePreprocessor:process(notes)
 	self.lanes = lanes
 end
 
+---@param path string
 function NotePreprocessor:print(path)
-	local file = io.open(path, "w")
+	local file = assert(io.open(path, "w"))
 	for i = 1, #self.lines do
 		local line = self.lines[i]
 		local notes = {}

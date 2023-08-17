@@ -9,6 +9,8 @@ local o4 = -1.453152027
 local o5 = 1.061405429
 local p = 0.3275911
 
+---@param x number
+---@return number
 function erfunc.erf(x)
 	local t = 1 / (1 + p * math.abs(x))
 	local y = 1 - (((((o5 * t + o4) * t) + o3) * t + o2) * t + o1) * t * math.exp(-x * x)
@@ -40,6 +42,8 @@ local c4 = 1.82365845766309853
 local d1 = 3.74146294065960872
 local d2 = 1.81848952562894617
 
+---@param x number
+---@return number
 function erfunc.erfinv(x)
 	local r
 	local sign = 1

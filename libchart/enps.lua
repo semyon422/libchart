@@ -38,10 +38,16 @@ local test = false
 		where note1.input == note2.input
 ]]
 
+---@param t number
+---@param c number
+---@return number
 function enps.expDensity(t, c)
 	return c == 0 and math.exp(-t) or (c + 1) / (1 / c + 1) ^ (c * t)
 end
 
+---@param notes any
+---@return number
+---@return table
 function enps.noteStrain(notes)
 	local lastNotes = {}
 	local strains = {}
@@ -63,6 +69,8 @@ function enps.noteStrain(notes)
 	return sumStrain / #notes, strains
 end
 
+---@param notes table
+---@return number
 function enps.generalizedKeymode(notes)
 	local dict = {}
 
@@ -89,6 +97,11 @@ function enps.generalizedKeymode(notes)
 	return sum / weight
 end
 
+---@param notes table
+---@return number
+---@return number
+---@return number
+---@return table
 function enps.getEnps(notes)
 	local aStrain, strains = enps.noteStrain(notes)
 	local generalizedKeymode = enps.generalizedKeymode(notes)

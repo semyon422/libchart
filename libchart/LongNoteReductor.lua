@@ -1,7 +1,13 @@
 local class = require("class")
 
+---@class libchart.LongNoteReductor
+---@operator call: libchart.LongNoteReductor
 local LongNoteReductor = class()
 
+---@param i number
+---@param note table
+---@return table?
+---@return table?
 function LongNoteReductor:getNextLines(i, note)
 	local lines = self.lines
 	for j = i + 1, #lines - 2 do
@@ -65,6 +71,10 @@ function LongNoteReductor:reduceLongNotes()
 	end
 end
 
+---@param notes table
+---@param lines table
+---@param columnCount number
+---@param targetMode number
 function LongNoteReductor:process(notes, lines, columnCount, targetMode)
 	self.notes = notes
 	self.lines = lines

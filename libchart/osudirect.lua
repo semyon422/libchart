@@ -14,26 +14,44 @@ local osudirect = {}
 	Top Rated
 	Most Played
 ]]
+
+---@param q string
+---@param r number?
+---@param p number?
+---@return string
 function osudirect.search(q, r, p)
 	return ("/web/osu-search.php?m=3&q=%s&r=%s&p=%s"):format(q, r or 4, p or 0)
 end
 
+---@param setId number
+---@return string
 function osudirect.download(setId)
 	return ("/d/%s"):format(setId)
 end
 
+---@param setId number
+---@param large boolean?
+---@return string
 function osudirect.thumbnail(setId, large)
 	return ("/thumb/%s%s.jpg"):format(setId, large and "l" or "")
 end
 
+---@param setId number
+---@param large boolean?
+---@return string
 function osudirect.card(setId, large)
 	return ("/beatmaps/%s/covers/card%s.jpg"):format(setId, large and "@2x" or "")
 end
 
+---@param setId number
+---@param large boolean?
+---@return string
 function osudirect.cover(setId, large)
 	return ("/beatmaps/%s/covers/cover%s.jpg"):format(setId, large and "@2x" or "")
 end
 
+---@param setId number
+---@return string
 function osudirect.preview(setId)
 	return ("/preview/%s.mp3"):format(setId)
 end
@@ -44,6 +62,8 @@ local SubmissionStatus = {
 	["3"] = "qualified",
 }
 
+---@param line string
+---@return table
 local function parseBeatmap(line)
 	local l = line:split("|")
 
@@ -97,15 +117,18 @@ local function parseBeatmap(line)
 	return beatmap
 end
 
+---@param response string
+---@return table?
+---@return string?
 function osudirect.parse(response)
 	local lines = response:split("\n")
 
 	local status = tonumber(lines[1])
 	if not status then
-		return false
+		return nil
 	end
 	if status < 0 then
-		return false, lines[2]
+		return nil, lines[2]
 	end
 
 	local beatmaps = {}

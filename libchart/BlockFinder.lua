@@ -1,6 +1,7 @@
 local class = require("class")
 local NoteBlock = require("libchart.NoteBlock")
 
+---@class libchart.BlockFinder
 local BlockFinder = class()
 
 function BlockFinder:new()
@@ -19,6 +20,8 @@ function BlockFinder:process()
 	end
 end
 
+---@param note table
+---@return table
 function BlockFinder:getBlock(note)
 	local block = self:findBlock(note)
 	block:extend()
@@ -26,15 +29,24 @@ function BlockFinder:getBlock(note)
 end
 
 local abs = math.abs
-local matchDelta = function(a, b, c, d, strict)
+
+---@param a number
+---@param b number
+---@param c number
+---@param d number
+---@param strict boolean?
+---@return boolean
+local function matchDelta(a, b, c, d, strict)
 	if not strict then
 		return abs(abs(a - b) - abs(c)) <= abs(d)
-	else
-		return abs(abs(a - b) - abs(c)) == abs(d)
 	end
+	return abs(abs(a - b) - abs(c)) == abs(d)
 end
 
-local sameType = function(a, b)
+---@param a table
+---@param b table
+---@return boolean
+local function sameType(a, b)
 	return
 		(a.startTime == a.endTime and b.startTime == b.endTime) or
 		matchDelta(abs(a.endTime - a.startTime), abs(b.endTime - b.startTime), 0, 1)
@@ -44,14 +56,24 @@ end
 	-- return matchDelta(b.startTime - a.endTime, c.startTime - b.endTime, 0, 1)
 -- end
 
-local checkType = function(forceSameType, baseNote, nextNote)
+---@param forceSameType boolean
+---@param baseNote table
+---@param nextNote table
+---@return boolean
+local function checkType(forceSameType, baseNote, nextNote)
 	if forceSameType then
 		return sameType(baseNote, nextNote)
 	end
 	return true
 end
 
-local checkNextNote = function(note, nextNote, step, deltaTime, forceSameType)
+---@param note table
+---@param nextNote table?
+---@param step number
+---@param deltaTime number
+---@param forceSameType boolean
+---@return boolean?
+local function checkNextNote(note, nextNote, step, deltaTime, forceSameType)
 	if not nextNote then return end
 	-- if sameType(note, nextNote) and note.startTime ~= note.endTime then
 		-- return true
@@ -63,6 +85,8 @@ local checkNextNote = function(note, nextNote, step, deltaTime, forceSameType)
 	end
 end
 
+---@param note table
+---@return table
 function BlockFinder:findBlock(note)
 	local block = NoteBlock()
 	block:addNote(note)
@@ -100,10 +124,14 @@ function BlockFinder:findBlock(note)
 	return block
 end
 
-local sortBlocks = function(a, b)
+---@param a table
+---@param b table
+---@return boolean
+local function sortBlocks(a, b)
 	return a.startTime < b.startTime or a.startTime == b.startTime and a.columnIndex < b.columnIndex
 end
 
+---@return table
 function BlockFinder:getNoteBlocks()
 	local blocks = {}
 
@@ -117,6 +145,7 @@ function BlockFinder:getNoteBlocks()
 	return blocks
 end
 
+---@return table
 function BlockFinder:getClearNoteBlocks()
 	local blocks = {}
 

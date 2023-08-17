@@ -16,6 +16,7 @@ normalscore.miss_addition = 0
 
 local mt = {__index = normalscore}
 
+---@return table
 function normalscore:new()
 	local ns = {
 		ranges = {},
@@ -26,6 +27,10 @@ function normalscore:new()
 	return setmetatable(ns, mt)
 end
 
+---@param sigma number
+---@param name any
+---@return number
+---@return number
 function normalscore:eq1i(sigma, name)
 	local N = self.samples_count
 	local H_i = self.hit_counts[name]
@@ -46,6 +51,8 @@ function normalscore:eq1i(sigma, name)
 		(-t_R * math.exp(-(t_R * s) ^ 2) + t_L * math.exp(-(t_L * s) ^ 2)) / (sigma ^ 2 * math.sqrt(2 * math.pi))
 end
 
+---@param sigma number
+---@return number
 function normalscore:eq1(sigma)
 	local sum1 = 0
 	local sum2 = 0
@@ -57,6 +64,8 @@ function normalscore:eq1(sigma)
 	return sum1 / sum2
 end
 
+---@param range_name any
+---@return table
 function normalscore:get_range(range_name)
 	local ranges = self.ranges
 
@@ -73,6 +82,8 @@ function normalscore:get_range(range_name)
 	return ranges[range_name]
 end
 
+---@return number
+---@return number
 function normalscore:get_max_range()
 	local ranges = self.ranges
 
@@ -87,6 +98,9 @@ function normalscore:get_max_range()
 	return l, r
 end
 
+---@param range table
+---@return number
+---@return number
 function normalscore:unpack_range(range)
 	if range[1] then
 		return range[1], range[2]
@@ -94,6 +108,8 @@ function normalscore:unpack_range(range)
 	return self:get_max_range()
 end
 
+---@param range_name any
+---@param delta_time number
 function normalscore:hit(range_name, delta_time)
 	local range = self:get_range(range_name)
 
@@ -114,6 +130,7 @@ function normalscore:hit(range_name, delta_time)
 	self.variance = self.variance_sum / self.hit_count
 end
 
+---@param range_name any
 function normalscore:miss(range_name)
 	self:get_range(range_name)
 

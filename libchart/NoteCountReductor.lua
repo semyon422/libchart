@@ -1,9 +1,15 @@
 local class = require("class")
 
+---@class libchart.NoteCountReductor
+---@operator call: libchart.NoteCountReductor
 local NoteCountReductor = class()
 
 local recursionLimit = 1000
 local recursionDepth = 0
+
+---@param linePairIndex number
+---@param line2NoteCount number
+---@return number
 function NoteCountReductor:check(linePairIndex, line2NoteCount)
 	local linePairs = self.linePairs
 	local rate = 0
@@ -58,6 +64,7 @@ function NoteCountReductor:check(linePairIndex, line2NoteCount)
 	return rate
 end
 
+---@param linePairIndex number
 function NoteCountReductor:processJackCount(linePairIndex)
 	local linePair = self.linePairs[linePairIndex]
 
@@ -91,6 +98,7 @@ function NoteCountReductor:processJackCount(linePairIndex)
 	end
 end
 
+---@param linePairIndex number
 function NoteCountReductor:preprocessLinePair(linePairIndex)
 	local linePairs = self.linePairs
 	local linePair = linePairs[linePairIndex]
@@ -215,6 +223,9 @@ function NoteCountReductor:processLinePairs()
 	end
 end
 
+---@param lines table
+---@param columnCount number
+---@param targetMode number
 function NoteCountReductor:process(lines, columnCount, targetMode)
 	self.lines = lines
 	self.columnCount = columnCount

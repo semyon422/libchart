@@ -1,7 +1,10 @@
 local class = require("class")
 
+---@class libchart.NoteApplyer
+---@operator call: libchart.NoteApplyer
 local NoteApplyer = class()
 
+---@param line table
 function NoteApplyer:applyNotesEqual(line)
 	-- add swap here if need
 	local notes = {}
@@ -13,6 +16,7 @@ function NoteApplyer:applyNotesEqual(line)
 	line.reducedNotes = notes
 end
 
+---@param line table
 function NoteApplyer:applyNotesLessShort(line)
 	-- TODO: choose notes with lower density
 	local notes = {}
@@ -24,6 +28,7 @@ function NoteApplyer:applyNotesLessShort(line)
 	line.reducedNotes = notes
 end
 
+---@param line table
 function NoteApplyer:applyNotesLessLong(line)
 	-- add swap here if need
 	local notes = {}
@@ -47,6 +52,7 @@ function NoteApplyer:applyNotesLessLong(line)
 	line.reducedNotes = notes
 end
 
+---@param line table
 function NoteApplyer:applyNotesLessCombined(line)
 	-- add swap here if need
 	local notes = {}
@@ -81,6 +87,7 @@ function NoteApplyer:applyNotesLessCombined(line)
 	line.reducedNotes = notes
 end
 
+---@param line table
 function NoteApplyer:applyNotesLess(line)
 	if line.shortNoteCount > 0 and line.longNoteCount == 0 then
 		self:applyNotesLessShort(line)
@@ -102,6 +109,10 @@ function NoteApplyer:applyNotes()
 	-- ! save probortions (ln:sn)
 end
 
+---@param notes table
+---@param lines table
+---@param columnCount number
+---@param targetMode number
 function NoteApplyer:process(notes, lines, columnCount, targetMode)
 	self.notes = notes
 	self.lines = lines

@@ -1,7 +1,11 @@
 local class = require("class")
 
+---@class libchart.DataSequenceProcessor
+---@operator call: libchart.DataSequenceProcessor
 local DataSequenceProcessor = class()
 
+---@param dataSequences table
+---@return table
 function DataSequenceProcessor:process(dataSequences)
 	local timeData = {}
 

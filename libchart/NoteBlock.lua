@@ -1,5 +1,7 @@
 local class = require("class")
 
+---@class libchart.NoteBlock
+---@operator call: libchart.NoteBlock
 local NoteBlock = class()
 
 function NoteBlock:new()
@@ -8,6 +10,8 @@ function NoteBlock:new()
 	self.notes = {}
 end
 
+---@param note table
+---@return libchart.NoteBlock
 function NoteBlock:addNote(note)
 	self.notes[#self.notes + 1] = note
 	self.baseColumnIndex = self.baseColumnIndex or note.columnIndex
@@ -19,6 +23,7 @@ function NoteBlock:addNote(note)
 	return self
 end
 
+---@return table
 function NoteBlock:getNotes()
 	local notes = {}
 
@@ -30,10 +35,12 @@ function NoteBlock:getNotes()
 	return notes
 end
 
+---@return table?
 function NoteBlock:getLastNote()
 	return self.notes[#self.notes]
 end
 
+---@return table
 function NoteBlock:lock()
 	self.locked = true
 
@@ -46,7 +53,8 @@ function NoteBlock:lock()
 	return self
 end
 
-local isNextLineFree = function(lastNote)
+---@return boolean?
+local function isNextLineFree(lastNote)
 	local nextLine = lastNote.line.next
 
 	if not nextLine then return end
@@ -102,10 +110,9 @@ function NoteBlock:print()
 	for _, note in ipairs(self.notes) do
 		print(note.lanePos, note.linePos)
 	end
-
-	return notes
 end
 
+---@param note table
 function NoteBlock:printNote(note)
 	print("note")
 	print("lanePos, linePos")

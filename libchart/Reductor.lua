@@ -5,6 +5,8 @@ local LineBalancer = require("libchart.LineBalancer")
 local NoteApplyer = require("libchart.NoteApplyer")
 local LongNoteReductor = require("libchart.LongNoteReductor")
 
+---@class libchart.Reductor
+---@operator call: libchart.Reductor
 local Reductor = class()
 
 function Reductor:new()
@@ -15,6 +17,8 @@ function Reductor:new()
 	self.longNoteReductor = LongNoteReductor()
 end
 
+---@param lines table
+---@return table
 function Reductor:exportLines(lines)
 	local notes = {}
 	for _, line in ipairs(lines) do
@@ -29,6 +33,8 @@ function Reductor:exportLines(lines)
 	return notes
 end
 
+---@param lines table
+---@return table
 function Reductor:exportLineCombination(lines)
 	local notes = {}
 	for _, line in ipairs(lines) do
@@ -43,7 +49,8 @@ function Reductor:exportLineCombination(lines)
 	return notes
 end
 
-function Reductor:exportNotes(lines)
+---@return table
+function Reductor:exportNotes()
 	local notes = {}
 	for _, note in ipairs(self.notes) do
 		if note.reducedColumnIndex then
@@ -53,6 +60,9 @@ function Reductor:exportNotes(lines)
 	return notes
 end
 
+---@param notes table
+---@param columnCount number
+---@param targetMode number
 function Reductor:process(notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount
@@ -71,7 +81,7 @@ function Reductor:process(notes, columnCount, targetMode)
 
 	self.longNoteReductor:process(notes, lines, columnCount, targetMode)
 
-	return self:exportNotes(lines)
+	self:exportNotes()
 end
 
 return Reductor

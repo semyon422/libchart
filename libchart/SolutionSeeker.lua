@@ -4,14 +4,22 @@ local SolutionSeeker = {}
 -- 	return a[2] > b[2]
 -- end
 
+---@param seeker any
 function SolutionSeeker:onForward(seeker)
 
 end
 
+---@param seeker any
 function SolutionSeeker:onBackward(seeker)
 
 end
 
+---@param notes table
+---@param laneCount number
+---@param check function
+---@param startNoteIndex number
+---@return boolean
+---@return string?
 function SolutionSeeker:solve(notes, laneCount, check, startNoteIndex)
 	local noteIndex = startNoteIndex or 1
 	while true do

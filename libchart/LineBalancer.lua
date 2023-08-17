@@ -1,18 +1,28 @@
 local class = require("class")
 local enps = require("libchart.enps")
 
+---@class libchart.LineBalancer
+---@operator call: libchart.LineBalancer
 local LineBalancer = class()
 
-local factorial
-factorial = function(n)
+---@param n number
+---@return number
+local function factorial(n)
 	return n == 0 and 1 or n * factorial(n - 1)
 end
 
-local getCombinationsCount = function(n, k)
+---@param n number
+---@param k number
+---@return number
+local function getCombinationsCount(n, k)
 	return factorial(n) / (factorial(k) * factorial(n - k))
 end
 
-local nextCombination = function(a, n, k)
+---@param a table
+---@param n number
+---@param k number
+---@return table?
+local function nextCombination(a, n, k)
 	local b = {}
 
 	for i = 1, k do
@@ -32,8 +42,6 @@ local nextCombination = function(a, n, k)
 		end
 		b[k + 1] = nil
 		return b
-	else
-		return
 	end
 end
 
@@ -88,6 +96,9 @@ function LineBalancer:createLineCombinationsCountTable()
 	self.lineCombinationsCountTable = lineCombinationsCountTable
 end
 
+---@param combinationMap table
+---@param overlap number
+---@return number
 function LineBalancer:overDiff(combinationMap, overlap)
 	local sum = 0
 
@@ -100,6 +111,8 @@ function LineBalancer:overDiff(combinationMap, overlap)
 	return sum
 end
 
+---@param time number
+---@return table
 function LineBalancer:lineExpDensities(time)
 	local densityStacks = self.densityStacks
 
@@ -115,6 +128,10 @@ end
 
 local recursionLimit = 100
 local recursionDepth = 0
+
+---@param lineIndex number
+---@param lineCombinationIndex number
+---@return number
 function LineBalancer:checkLine(lineIndex, lineCombinationIndex)
 	local lines = self.lines
 	local lineCombinationsMap = self.lineCombinationsMap
@@ -274,6 +291,9 @@ function LineBalancer:balanceLines()
 	end
 end
 
+---@param lines table
+---@param columnCount number
+---@param targetMode number
 function LineBalancer:process(lines, columnCount, targetMode)
 	self.lines = lines
 	self.columnCount = columnCount

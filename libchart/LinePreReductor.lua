@@ -1,8 +1,15 @@
 local class = require("class")
 
+---@class libchart.LinePreReductor
+---@operator call: libchart.LinePreReductor
 local LinePreReductor = class()
 
-local intersectSegment = function(tc, tm, bc, bm)
+---@param tc number
+---@param tm number
+---@param bc number
+---@param bm number
+---@return number
+local function intersectSegment(tc, tm, bc, bm)
 	return (
 		math.max((tc - 1) / tm, math.min(tc / tm, bc / bm)) -
 		math.min(tc / tm, math.max((tc - 1) / tm, (bc - 1) / bm))
@@ -20,6 +27,7 @@ function LinePreReductor:createIntersectTable()
 	self.intersectTable = intersectTable
 end
 
+---@param line string
 function LinePreReductor:processLine(line)
 	local intersectTable = self.intersectTable
 	local targetMode = self.targetMode
@@ -81,6 +89,10 @@ function LinePreReductor:processLine(line)
 	line.maxReducedNoteCount = maxReducedNoteCount
 end
 
+---@param notes table
+---@param columnCount number
+---@param targetMode number
+---@return table
 function LinePreReductor:getLines(notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount

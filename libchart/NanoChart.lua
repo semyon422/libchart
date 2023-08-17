@@ -2,6 +2,8 @@ local class = require("class")
 local byte = require("byte")
 local bit = require("bit")
 
+---@class libchart.NanoChart
+---@operator call: libchart.NanoChart
 local NanoChart = class()
 
 --[[
@@ -73,7 +75,9 @@ local NanoChart = class()
 	1111 0000 1111 1111 -- 6th note
 ]]
 
-local tobits = function(n) -- order is reversed
+---@param n number
+---@return table
+local function tobits(n) -- order is reversed
 	local t = {}
 	while n > 0 do
 		local rest = n % 2
@@ -88,10 +92,14 @@ assert(table.concat(tobits(2)) == "01")
 assert(table.concat(tobits(1023)) == "1111111111")
 assert(table.concat(tobits(1024)) == "00000000001")
 
+---@param input number
+---@param type number
+---@param sameTime boolean?
+---@param noteTime number?
+---@return string
 function NanoChart:encodeNote(input, type, sameTime, noteTime)
 	local prefix = ""
 	local postfix = ""
-	local noteType
 
 	local bits = {}
 
@@ -130,8 +138,13 @@ function NanoChart:encodeNote(input, type, sameTime, noteTime)
 	return prefix .. data .. postfix
 end
 
-local hexReplace = function(c) return ("%02x"):format(c:byte()) end
-local tohex = function(s)
+---@param c string
+---@return string
+local function hexReplace(c) return ("%02x"):format(c:byte()) end
+
+---@param s string
+---@return string
+local function tohex(s)
     return (s:gsub('.', hexReplace))
 end
 

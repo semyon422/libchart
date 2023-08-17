@@ -1,12 +1,15 @@
 local class = require("class")
 local NoteBlock = require("libchart.NoteBlock")
 
+---@class libchart.Upscaler
+---@operator call: libchart.Upscaler
 local Upscaler = class()
 
 function Upscaler:new()
 	self.noteBlocks = {}
 end
 
+---@param columnCount number
 function Upscaler:load(columnCount)
 	self.columnCount = columnCount
 	for i = 1, columnCount do
@@ -17,6 +20,9 @@ function Upscaler:load(columnCount)
 	end
 end
 
+---@param noteBlocks table
+---@return table
+---@return table
 function Upscaler:process(noteBlocks)
 	local blocks = {}
 	for i = 1, #noteBlocks do
@@ -47,6 +53,8 @@ function Upscaler:process(noteBlocks)
 	return notes, blocks
 end
 
+---@param noteBlock table
+---@return number?
 function Upscaler:getBestColumnIndex(noteBlock)
 	local rates = {}
 	for columnIndex = 1, self.columnCount do

@@ -3,13 +3,21 @@ local SolutionSeeker = require("libchart.SolutionSeeker")
 
 local NextUpscaler = class()
 
-local intersectSegment = function(tc, tm, bc, bm)
+---@param tc number
+---@param tm number
+---@param bc number
+---@param bm number
+---@return number
+local function intersectSegment(tc, tm, bc, bm)
 	return (
 		math.max((tc - 1) / tm, math.min(tc / tm, bc / bm)) -
 		math.min(tc / tm, math.max((tc - 1) / tm, (bc - 1) / bm))
 	) * tm
 end
 
+---@param i number
+---@param lane number
+---@return number?
 function NextUpscaler:getPrevNoteIndex(i, lane)
 	for k = i - 1, 1, -1 do
 		local cnote = self.notes[k]
@@ -19,10 +27,16 @@ function NextUpscaler:getPrevNoteIndex(i, lane)
 	end
 end
 
+---@param i number
+---@param lane number
+---@return table?
 function NextUpscaler:getPrevNote(i, lane)
 	return self.notes[self:getPrevNoteIndex(i, lane)]
 end
 
+---@param i number
+---@param lane number
+---@return number
 function NextUpscaler:getDelta(i, lane)
 	local startTime = self.notes[i].startTime
 	local prevNoteIndex = self:getPrevNoteIndex(i, lane)
@@ -32,6 +46,9 @@ function NextUpscaler:getDelta(i, lane)
 	return startTime + 1000
 end
 
+---@param i number
+---@param lane number
+---@return number
 function NextUpscaler:checkHorizontalSpacing(i, lane)
 	local note = self.notes[i]
 
@@ -70,6 +87,9 @@ function NextUpscaler:checkHorizontalSpacing(i, lane)
 	return rates[lane]
 end
 
+---@param i number
+---@param lane number
+---@return number
 function NextUpscaler:checkVerticalSpacing(i, lane)
 	local note = self.notes[i]
 	local prevNote = self:getPrevNote(i, lane)
@@ -105,6 +125,10 @@ function NextUpscaler:checkVerticalSpacing(i, lane)
 end
 
 local recursionLimit = 0
+
+---@param noteIndex number
+---@param lane number
+---@return number
 function NextUpscaler:check(noteIndex, lane)
 	local rate = 1
 
