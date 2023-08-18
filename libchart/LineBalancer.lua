@@ -97,7 +97,7 @@ function LineBalancer:createLineCombinationsCountTable()
 end
 
 ---@param combinationMap table
----@param overlap number
+---@param overlap table
 ---@return number
 function LineBalancer:overDiff(combinationMap, overlap)
 	local sum = 0

@@ -63,6 +63,7 @@ end
 ---@param notes table
 ---@param columnCount number
 ---@param targetMode number
+---@return table
 function Reductor:process(notes, columnCount, targetMode)
 	self.notes = notes
 	self.columnCount = columnCount
@@ -81,7 +82,7 @@ function Reductor:process(notes, columnCount, targetMode)
 
 	self.longNoteReductor:process(notes, lines, columnCount, targetMode)
 
-	self:exportNotes()
+	return self:exportNotes()
 end
 
 return Reductor

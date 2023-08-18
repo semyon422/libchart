@@ -27,7 +27,7 @@ function LinePreReductor:createIntersectTable()
 	self.intersectTable = intersectTable
 end
 
----@param line string
+---@param line table
 function LinePreReductor:processLine(line)
 	local intersectTable = self.intersectTable
 	local targetMode = self.targetMode
