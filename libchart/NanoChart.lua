@@ -199,6 +199,11 @@ function NanoChart:encode(hash, inputs, notes)
 	return table.concat(objects)
 end
 
+---@param content string
+---@return number
+---@return string
+---@return number
+---@return table
 function NanoChart:decode(content)
 	local buffer = byte.buffer(#content)
 	buffer:fill(content):seek(0)
