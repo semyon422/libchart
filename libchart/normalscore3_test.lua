@@ -1,7 +1,7 @@
 package.loaded["libchart.erfunc"] = require("erfunc")
 local normalscore = require("normalscore3")
 
-local ns = normalscore()
+local ns = normalscore:new()
 
 local function norm_values(n, mu, sigma)
 	math.randomseed(0)
@@ -71,21 +71,21 @@ local function is_valid(score)
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:hit("A", 0.1)
 	ns:update()
 	assert(is_valid(ns.score))
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:miss("A")
 	ns:update()
 	assert(is_inf(ns.score))
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:hit("A", 0.1)
 	ns:miss("A")
 	ns:update()
@@ -93,7 +93,7 @@ do
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:hit("A", 0.1)
 	ns:hit("A", 0.11)
 	ns:miss("B")
@@ -102,7 +102,7 @@ do
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:hit("A", 0.1)
 	ns:hit("B", 0.11)
 	ns:miss("B")
@@ -111,7 +111,7 @@ do
 end
 
 do
-	local ns = normalscore()
+	local ns = normalscore:new()
 	ns:hit("A", 0.1)
 	ns:hit("A", 0.11)
 	ns:hit("B", 0.12)
@@ -119,4 +119,20 @@ do
 	ns:miss("B")
 	ns:update()
 	assert(is_valid(ns.score))
+end
+
+-- a case with inf/nan sigma_m, fix it later
+do
+	local ns = normalscore:new()
+
+	ns.ranges.a = {0.1223646190068, -0.010260595034254}
+
+
+	ns.samples_count = 37
+	ns.hit_counts.a = 35
+	ns.sample_counts.a = 37
+	ns.mean_sums.a = 0.011442789872754 * ns.hit_counts.a
+
+	local a, b = ns:eq1i(0.00041512071994903, "a")
+	print(a, b, a / b)
 end

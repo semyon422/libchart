@@ -170,7 +170,8 @@ function normalscore:update()
 	end
 
 	-- initial estimate using t_0 = (maxR - minL) / 2
-	local sigma_m = (maxR - minL) / (2 * erfunc.erfinv(H / N) * math.sqrt(2))
+	local sigma_m_init = (maxR - minL) / (2 * erfunc.erfinv(H / N) * math.sqrt(2))
+	local sigma_m = sigma_m_init
 
 	local x
 	local k = 1
@@ -178,6 +179,10 @@ function normalscore:update()
 		x = sigma_m
 		sigma_m = sigma_m - self:eq1(sigma_m)
 		k = k + 1
+		if sigma_m ~= sigma_m or math.abs(sigma_m) == math.huge then  -- quick hack, fix this later
+			sigma_m = sigma_m_init
+			break
+		end
 	until x == sigma_m or k > 20
 	self.ratio_score = sigma_m
 
