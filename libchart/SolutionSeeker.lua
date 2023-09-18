@@ -17,7 +17,7 @@ end
 ---@param notes table
 ---@param laneCount number
 ---@param check function
----@param startNoteIndex number
+---@param startNoteIndex number?
 ---@return boolean
 ---@return string?
 function SolutionSeeker:solve(notes, laneCount, check, startNoteIndex)
