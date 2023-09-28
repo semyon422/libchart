@@ -131,7 +131,7 @@ function pattern_analyzer.analyze(layerData)
 		return ""
 	end
 
-	local time_list, int_count_map = load_layerData(layerData.noteDatas.key)
+	local time_list, int_count_map = load_layerData(layerData)
 
 	local all_stats = get_stats(int_count_map)
 	local line_stats = get_stats(get_line_intervals(time_list))
