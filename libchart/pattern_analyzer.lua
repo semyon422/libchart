@@ -125,8 +125,13 @@ local pattern_names = {
 }
 
 ---@param layerData ncdk.LayerData
+---@return string
 function pattern_analyzer.analyze(layerData)
-	local time_list, int_count_map = load_layerData(layerData)
+	if not layerData.noteDatas.key then
+		return ""
+	end
+
+	local time_list, int_count_map = load_layerData(layerData.noteDatas.key)
 
 	local all_stats = get_stats(int_count_map)
 	local line_stats = get_stats(get_line_intervals(time_list))
