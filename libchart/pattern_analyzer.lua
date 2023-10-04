@@ -136,6 +136,10 @@ function pattern_analyzer.analyze(layerData)
 	local all_stats = get_stats(int_count_map)
 	local line_stats = get_stats(get_line_intervals(time_list))
 
+	if not line_stats[1] then
+		return ""
+	end
+
 	local out = {}
 
 	local baseInterval = line_stats[1][1]
