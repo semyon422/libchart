@@ -125,10 +125,11 @@ local pattern_names = {
 }
 
 ---@param layerData ncdk.LayerData
----@return string
+---@return table
+---@return table
 function pattern_analyzer.analyze(layerData)
 	if not layerData.noteDatas.key then
-		return ""
+		return {}, {}
 	end
 
 	local time_list, int_count_map = load_layerData(layerData)
@@ -137,10 +138,10 @@ function pattern_analyzer.analyze(layerData)
 	local line_stats = get_stats(get_line_intervals(time_list))
 
 	if not line_stats[1] then
-		return ""
+		return {}, {}
 	end
 
-	local out = {}
+	local patterns = {}
 
 	local baseInterval = line_stats[1][1]
 
@@ -166,11 +167,28 @@ function pattern_analyzer.analyze(layerData)
 				bpm = bpm * 3
 			end
 
-			table.insert(out, ("%3d%% %0.f %s"):format(stat[2] * 100, bpm, pattern_names[_match[1]]))
-		-- else
-		-- 	local bpm = 60 / 4 / (ratio * baseInterval)
-		-- 	print(("%3d%% %0.f ?"):format(stat[2] * 100, bpm))
+			table.insert(patterns, {
+				weight = stat[2],
+				tempo = bpm,
+				name = _match[1]
+			})
 		end
+	end
+
+	return patterns, line_stats
+end
+
+---@param patterns table
+---@return string
+function pattern_analyzer.format(patterns, line_stats)
+	local out = {}
+
+	for i, pattern in ipairs(patterns) do
+		out[i] = ("%3d%% %0.f %s"):format(
+			pattern.weight * 100,
+			pattern.tempo,
+			pattern_names[pattern.name]
+		)
 	end
 
 	for i = 1, 3 do
