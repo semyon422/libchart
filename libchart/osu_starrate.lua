@@ -108,7 +108,10 @@ function Beatmap:calculateDifficulty()
 	local maximumStrain = 0
 
 	local pNote
-	for _, note in ipairs(self.notes) do
+	for i, note in ipairs(self.notes) do
+		if note.startTime - intervalEndTime > 3600 then  -- note at inf protection
+			break
+		end
 		while note.startTime > intervalEndTime do
 			table.insert(highestStrains, maximumStrain)
 			if not pNote then
