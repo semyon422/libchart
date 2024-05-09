@@ -1,22 +1,21 @@
----@param noteChart ncdk.NoteChart
+---@param chart ncdk2.Chart
 ---@return table
-local function simplify_notechart(noteChart)
+local function simplify_notechart(chart)
 	local notes = {}
 
-	local input_map = noteChart.inputMode:getInputMap()
+	local columns = chart.inputMode:getColumns()
 
-	for noteDatas, inputType, inputIndex, layerDataIndex in noteChart:getInputIterator() do
-		for _, noteData in ipairs(noteDatas) do
-			local input = inputType .. inputIndex
-			local t = noteData.noteType
-			if input_map[input] and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
+	for _notes, column, layerDataIndex in chart:getNotesIterator() do
+		for _, _note in ipairs(_notes) do
+			local t = _note.noteType
+			if column <= columns and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
 				local note = {
-					time = noteData.timePoint.absoluteTime,
-					input = input,
-					column = input_map[input],
+					time = _note.visualPoint.point.absoluteTime,
+					column = column,
+					input = column,
 				}
-				if noteData.endNoteData then
-					note.end_time = noteData.endNoteData.timePoint.absoluteTime
+				if _note.endNote then
+					note.end_time = _note.endNote.visualPoint.point.absoluteTime
 				end
 				table.insert(notes, note)
 			end
