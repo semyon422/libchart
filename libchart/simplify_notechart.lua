@@ -3,15 +3,16 @@
 local function simplify_notechart(chart)
 	local notes = {}
 
-	local columns = chart.inputMode:getColumns()
+	local inputMap = chart.inputMode:getInputMap()
 
 	for _notes, column, layerDataIndex in chart:getNotesIterator() do
 		for _, _note in ipairs(_notes) do
 			local t = _note.noteType
-			if column <= columns and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
+			local col = inputMap[column]
+			if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
 				local note = {
 					time = _note.visualPoint.point.absoluteTime,
-					column = column,
+					column = col,
 					input = column,
 				}
 				if _note.endNote then
