@@ -5,21 +5,19 @@ local function simplify_notechart(chart)
 
 	local inputMap = chart.inputMode:getInputMap()
 
-	for _notes, column, layerDataIndex in chart:getNotesIterator() do
-		for _, _note in ipairs(_notes) do
-			local t = _note.noteType
-			local col = inputMap[column]
-			if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
-				local note = {
-					time = _note.visualPoint.point.absoluteTime,
-					column = col,
-					input = column,
-				}
-				if _note.endNote then
-					note.end_time = _note.endNote.visualPoint.point.absoluteTime
-				end
-				table.insert(notes, note)
+	for _note, column in chart:iterNotes() do
+		local t = _note.noteType
+		local col = inputMap[column]
+		if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
+			local note = {
+				time = _note.visualPoint.point.absoluteTime,
+				column = col,
+				input = column,
+			}
+			if _note.endNote then
+				note.end_time = _note.endNote.visualPoint.point.absoluteTime
 			end
+			table.insert(notes, note)
 		end
 	end
 	table.sort(notes, function(a, b)
