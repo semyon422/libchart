@@ -37,6 +37,12 @@ function int_rates.get_exp(x, qs)
 	return math.floor(_q + 0.5)
 end
 
+function int_rates.is_q_rate(x, qs)
+	qs = qs or q_size
+	local exp = int_rates.get_exp(x, qs)
+	return int_rates.round(2 ^ (exp / qs)) == x
+end
+
 for i = xi_min, xi_max do
 	local x = i / size
 	assert(int_rates.encode(int_rates.decode(i)) == i)
