@@ -90,15 +90,15 @@ local function get_stats(map)
 	return stats
 end
 
----@param layer ncdk2.Layer
+---@param chart ncdk2.Chart
 ---@return table
 ---@return table
-local function load_layer(layer)
+local function load_layer(chart)
 	local time_list = {}
 	local time_map = {}
 	local int_count_map = {}
 
-	for column, notes in layer.notes:iter() do
+	for column, notes in pairs(chart.notes:getColumnNotes()) do
 		for i = 1, #notes - 1 do
 			local time = notes[i].visualPoint.point.absoluteTime
 			local next_time = notes[i + 1].visualPoint.point.absoluteTime
@@ -127,11 +127,11 @@ local pattern_names = {
 	s = "stream"
 }
 
----@param layer ncdk2.Layer
+---@param chart ncdk2.Chart
 ---@return table
 ---@return table
-function pattern_analyzer.analyze(layer)
-	local time_list, int_count_map = load_layer(layer)
+function pattern_analyzer.analyze(chart)
+	local time_list, int_count_map = load_layer(chart)
 
 	local all_stats = get_stats(int_count_map)
 	local line_stats = get_stats(get_line_intervals(time_list))

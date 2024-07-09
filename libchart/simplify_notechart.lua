@@ -5,7 +5,8 @@ local function simplify_notechart(chart)
 
 	local inputMap = chart.inputMode:getInputMap()
 
-	for _note, column in chart:iterNotes() do
+	for _, _note in chart.notes:iter() do
+		local column = _note.column
 		local t = _note.noteType
 		local col = inputMap[column]
 		if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
