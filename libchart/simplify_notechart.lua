@@ -11,12 +11,12 @@ local function simplify_notechart(chart)
 		local col = inputMap[column]
 		if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
 			local note = {
-				time = _note.visualPoint.point.absoluteTime,
+				time = _note:getTime(),
 				column = col,
 				input = column,
 			}
 			if _note.endNote then
-				note.end_time = _note.endNote.visualPoint.point.absoluteTime
+				note.end_time = _note.endNote:getTime()
 			end
 			table.insert(notes, note)
 		end

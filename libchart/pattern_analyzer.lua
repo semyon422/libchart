@@ -100,8 +100,8 @@ local function load_layer(chart)
 
 	for column, notes in pairs(chart.notes:getColumnNotes()) do
 		for i = 1, #notes - 1 do
-			local time = notes[i].visualPoint.point.absoluteTime
-			local next_time = notes[i + 1].visualPoint.point.absoluteTime
+			local time = notes[i]:getTime()
+			local next_time = notes[i + 1]:getTime()
 
 			time_map[time] = true
 			time_map[next_time] = true
