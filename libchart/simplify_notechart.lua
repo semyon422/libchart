@@ -1,22 +1,25 @@
+local table_util = require("table_util")
+
 ---@param chart ncdk2.Chart
+---@param note_types ncdk2.NoteType[]
 ---@return table
-local function simplify_notechart(chart)
+local function simplify_notechart(chart, note_types)
 	local notes = {}
 
 	local inputMap = chart.inputMode:getInputMap()
+	local types = table_util.invert(note_types)
 
-	for _, _note in chart.notes:iter() do
-		local column = _note.column
-		local t = _note.noteType
+	for _, _note in ipairs(chart.notes:getLinkedNotes()) do
+		local column = _note:getColumn()
 		local col = inputMap[column]
-		if col and (t == "ShortNote" or t == "LongNoteStart" or t == "LaserNoteStart") then
+		if col and types[_note:getType()] then
 			local note = {
-				time = _note:getTime(),
+				time = _note:getStartTime(),
 				column = col,
 				input = column,
 			}
-			if _note.endNote then
-				note.end_time = _note.endNote:getTime()
+			if _note:getSize() > 1 then
+				note.end_time = _note:getEndTime()
 			end
 			table.insert(notes, note)
 		end
