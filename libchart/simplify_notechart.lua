@@ -18,7 +18,7 @@ local function simplify_notechart(chart, note_types)
 				column = col,
 				input = column,
 			}
-			if _note:getSize() > 1 then
+			if _note:isLong() then
 				note.end_time = _note:getEndTime()
 			end
 			table.insert(notes, note)
