@@ -72,7 +72,7 @@ function GifResult:drawScore(im)
 		"acc:  " .. Format.accuracy(score.accuracy),
 		"miss: " .. score.miss,
 		"",
-		"input: " .. Format.inputMode(chartview.inputmode),
+		"input: " .. Format.inputMode(chartview.chartdiff_inputmode),
 		"rate:  " .. ("%0.3fx"):format(chartview.rate),
 		"",
 		"enps: " .. Format.difficulty(chartview.enps_diff) .. " *",
