@@ -148,7 +148,7 @@ function GifResult:create(chartview, score, notes, columns)
 	self:drawScore(tim_bg)
 	table.insert(out, tim_bg:gifAnimAddStr(true, 0, 0, 2, gd.DISPOSAL_NONE, im))
 
-	local start_time = chartview.preview_time
+	local start_time = chartview.preview_time or 0
 
 	local prev_im = tim_bg
 	for dt = 0, duration * 100, 2 do
