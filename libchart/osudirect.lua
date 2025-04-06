@@ -1,3 +1,5 @@
+local string_util = require("string_util")
+
 local osudirect = {}
 
 --[[
@@ -65,7 +67,7 @@ local SubmissionStatus = {
 ---@param line string
 ---@return table
 local function parseBeatmap(line)
-	local l = line:split("|")
+	local l = string_util.split(line, "|")
 
 	local beatmap = {}
 	beatmap.serverFilename = l[1]
@@ -89,7 +91,7 @@ local function parseBeatmap(line)
 		beatmap.filesize_novideo = tonumber(l[13])
 	end
 	if 13 < #l then
-		local difficulties = l[14]:split(",")
+		local difficulties = string_util.split(l[14], ",")
 		beatmap.difficulties = {}
 		for i, subline in ipairs(difficulties) do
 			local tooltip, mode = subline:match("^(.+)@(.-)$")
@@ -121,7 +123,7 @@ end
 ---@return table?
 ---@return string?
 function osudirect.parse(response)
-	local lines = response:split("\n")
+	local lines = string_util.split(response, "\n")
 
 	local status = tonumber(lines[1])
 	if not status then
