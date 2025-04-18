@@ -29,7 +29,7 @@ end
 function GifResult:drawNotes(im, start_time, offset)
 	local notes = self.notes
 	local columns = self.columns
-	local rate = self.score.rate
+	local rate = self.chartplay.rate
 
 	local white = im:colorClosestHWB(255, 255, 255)
 	local w, h = im:sizeXY()
@@ -62,15 +62,15 @@ end
 
 function GifResult:drawScore(im)
 	local chartview = self.chartview
-	local score = self.score
+	local chartplay = self.chartplay
 
 	local white = im:colorClosestHWB(255, 255, 255)
 
 	local lines = {
-		"rating: " .. Format.difficulty(score.rating),
+		"rating: " .. Format.difficulty(chartplay.rating),
 		"",
-		"acc:  " .. Format.accuracy(score.accuracy),
-		"miss: " .. score.miss,
+		"acc:  " .. Format.accuracy(chartplay.accuracy),
+		"miss: " .. chartplay.miss_count,
 		"",
 		"input: " .. Format.inputMode(chartview.chartdiff_inputmode),
 		"rate:  " .. ("%0.3fx"):format(chartview.rate),
@@ -110,11 +110,11 @@ function GifResult:getBackgroundImage()
 end
 
 ---@param chartview table
----@param score table
+---@param chartplay sea.Chartplay
 ---@return string
-function GifResult:create(chartview, score, notes, columns)
+function GifResult:create(chartview, chartplay, notes, columns)
 	self.chartview = chartview
-	self.score = score
+	self.chartplay = chartplay
 	self.notes = notes
 	self.columns = columns
 
