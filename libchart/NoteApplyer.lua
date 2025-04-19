@@ -119,7 +119,7 @@ function NoteApplyer:process(notes, lines, columnCount, targetMode)
 	self.columnCount = columnCount
 	self.targetMode = targetMode
 
-	print("applyNotes")
+	-- print("applyNotes")
 	self:applyNotes()
 
 	for _, note in ipairs(self.notes) do

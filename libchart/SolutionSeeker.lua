@@ -90,7 +90,7 @@ function SolutionSeeker:solve(notes, laneCount, check, startNoteIndex)
 			prevSeeker.lanes[prevSeeker.lane] = -1
 			prevSeeker.lane = nil
 			noteIndex = noteIndex - 1
-			print("back" .. noteIndex, unpack(prevSeeker.lanes))
+			-- print("back" .. noteIndex, unpack(prevSeeker.lanes))
 		end
 	end
 	if noteIndex == 1 then

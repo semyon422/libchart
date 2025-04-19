@@ -102,7 +102,7 @@ function LongNoteReductor:process(notes, lines, columnCount, targetMode)
 		allLinesMap[time] = i
 	end
 
-	print("reduceLongNotes")
+	-- print("reduceLongNotes")
 	self:reduceLongNotes()
 end
 

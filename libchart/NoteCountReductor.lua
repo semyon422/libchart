@@ -244,9 +244,9 @@ function NoteCountReductor:process(lines, columnCount, targetMode)
 		self.targetMode, self.columnCount
 	]]
 
-	print("preprocessLinePairs")
+	-- print("preprocessLinePairs")
 	self:preprocessLinePairs()
-	print("processLinePairs")
+	-- print("processLinePairs")
 	self:processLinePairs()
 
 	--[[output

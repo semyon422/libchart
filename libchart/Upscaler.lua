@@ -47,7 +47,7 @@ function Upscaler:process(noteBlocks)
 		end
 	end
 	for columnIndex = 1, self.columnCount do
-		print(columnIndex, columns[columnIndex])
+		-- print(columnIndex, columns[columnIndex])
 	end
 
 	return notes, blocks

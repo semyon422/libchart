@@ -308,7 +308,7 @@ function LineBalancer:process(lines, columnCount, targetMode)
 		lines
 	]]
 
-	print("balanceLines")
+	-- print("balanceLines")
 	self:balanceLines()
 
 	--[[
