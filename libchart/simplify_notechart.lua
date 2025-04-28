@@ -2,8 +2,9 @@ local table_util = require("table_util")
 
 ---@param chart ncdk2.Chart
 ---@param note_types ncdk2.NoteType[]
----@return table
+---@return {time: number, column: integer, input: ncdk2.Column, end_time: number?}[]
 local function simplify_notechart(chart, note_types)
+	---@type {time: number, column: integer, input: ncdk2.Column, end_time: number?}[]
 	local notes = {}
 
 	local inputMap = chart.inputMode:getInputMap()
