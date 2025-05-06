@@ -164,8 +164,9 @@ function normalscore:update()
 
 	local minL, maxR = self:get_max_range()
 	if minL == maxR then
-		self.score_squared = 0
-		self.score = 0
+		local s = M == 0 and 0 or math.huge
+		self.score_squared = s
+		self.score = s
 		return
 	end
 

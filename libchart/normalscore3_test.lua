@@ -91,7 +91,7 @@ function test.test3(t)
 	ns:hit("A", 0.1)
 	ns:miss("A")
 	ns:update()
-	t:assert(is_valid(ns.score))
+	t:assert(is_inf(ns.score))
 end
 
 function test.test4(t)
@@ -137,6 +137,15 @@ function test.test7(t)
 
 	local a, b = ns:eq1i(0.00041512071994903, "a")
 	-- print(a, b, a / b)
+end
+
+function test.test8(t)
+	local ns = normalscore:new()
+	ns:hit("A", 0.1)
+	ns:miss("B")
+	ns:miss("B")
+	ns:update()
+	t:assert(is_inf(ns.score))
 end
 
 return test
