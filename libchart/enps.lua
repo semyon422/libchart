@@ -53,6 +53,10 @@ function enps.noteStrain(notes)
 	local strains = {}
 	local sumStrain = 0
 
+	if #notes == 0 then
+		return 0, strains
+	end
+
 	for _, note in ipairs(notes) do
 		if lastNotes[note.input] then
 			note.lastNote = lastNotes[note.input]
@@ -72,6 +76,10 @@ end
 ---@param notes table
 ---@return number
 function enps.generalizedKeymode(notes)
+	if #notes == 0 then
+		return 0
+	end
+
 	local dict = {}
 
 	for _, note in ipairs(notes) do
