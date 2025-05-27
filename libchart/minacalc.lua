@@ -68,6 +68,8 @@ local calc_handle = lib.create_calc()
 
 local minacalc = {}
 
+local empty_ssr = ffi.new("Ssr")
+
 ---@param notes {time: number, column: integer}[]
 ---@param columns integer
 ---@param rate number
@@ -103,7 +105,14 @@ function minacalc.calc(notes, columns, rate, accuracy)
 	local _rows = ffi.new("NoteInfo[?]", #rows, rows)
 
 	columns = math.ceil(columns / 2) * 2
-	local ssr = lib.calc_ssr(calc_handle, _rows, #rows, rate, accuracy, columns)
+
+	local ssr = empty_ssr
+
+	-- C++ exception
+	local ok, err = pcall(lib.calc_ssr, calc_handle, _rows, #rows, rate, accuracy, columns)
+	if ok then
+		ssr = err
+	end
 
 	return {
 		overall = ssr.overall,
