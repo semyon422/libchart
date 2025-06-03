@@ -68,6 +68,13 @@ local lib = ffi.load("minacalc")
 
 local calc_handle = lib.create_calc()
 
+local function fix_num(n)
+	if n ~= n or n == math.huge then
+		return 0
+	end
+	return n
+end
+
 local minacalc = {}
 
 ---@type minacalc.Ssr
@@ -124,7 +131,7 @@ function minacalc.calc_rate_multipliers(notes, columns, base_rate)
 	local rate_multipliers = {}
 
 	for i = 0, 13, 1 do
-		table.insert(rate_multipliers, msds[i].overall / base_rate.overall)
+		table.insert(rate_multipliers, fix_num(msds[i].overall / base_rate.overall))
 	end
 
 	return rate_multipliers
@@ -147,14 +154,14 @@ function minacalc.calc(notes, columns, rate)
 	end
 
 	return {
-		overall = ssr.overall,
-		stream = ssr.stream,
-		jumpstream = ssr.jumpstream,
-		handstream = ssr.handstream,
-		stamina = ssr.stamina,
-		jackspeed = ssr.jackspeed,
-		chordjack = ssr.chordjack,
-		technical = ssr.technical,
+		overall = fix_num(ssr.overall),
+		stream = fix_num(ssr.stream),
+		jumpstream = fix_num(ssr.jumpstream),
+		handstream = fix_num(ssr.handstream),
+		stamina = fix_num(ssr.stamina),
+		jackspeed = fix_num(ssr.jackspeed),
+		chordjack = fix_num(ssr.chordjack),
+		technical = fix_num(ssr.technical),
 	}
 end
 
@@ -175,14 +182,14 @@ function minacalc.calc_ssr(notes, columns, rate, accuracy)
 	end
 
 	return {
-		overall = ssr.overall,
-		stream = ssr.stream,
-		jumpstream = ssr.jumpstream,
-		handstream = ssr.handstream,
-		stamina = ssr.stamina,
-		jackspeed = ssr.jackspeed,
-		chordjack = ssr.chordjack,
-		technical = ssr.technical,
+		overall = fix_num(ssr.overall),
+		stream = fix_num(ssr.stream),
+		jumpstream = fix_num(ssr.jumpstream),
+		handstream = fix_num(ssr.handstream),
+		stamina = fix_num(ssr.stamina),
+		jackspeed = fix_num(ssr.jackspeed),
+		chordjack = fix_num(ssr.chordjack),
+		technical = fix_num(ssr.technical),
 	}
 end
 
